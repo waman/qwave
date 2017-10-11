@@ -7,27 +7,35 @@ import (
 	"log"
 )
 
-func toComplex(re float64) complex128 {
-	return complex(re, 0)
-}
-
-// 1/√2
-var sqrt2inv complex128 = toComplex(1/math.Sqrt(2))
+// 1/√2 (sqrt 2 inverse)
+var s2i float64 = 1/math.Sqrt(2)
 
 var (
-	Zero   *State = NewState(1, 0)
-	One    *State = NewState(0, 1)
-	Plus   *State = NewState(sqrt2inv, sqrt2inv)
-	Minus  *State = NewState(sqrt2inv, -sqrt2inv)
-	PlusI  *State = NewState(sqrt2inv, sqrt2inv*1i)
-	MinusI *State = NewState(sqrt2inv, -sqrt2inv*1i)
+	zero   *State = newState(1, 0)
+	one    *State = newState(0, 1)
+	plus   *State = newState(s2i, complex(s2i, 0))
+	minus  *State = newState(s2i, -complex(s2i, 0))
+	plusI  *State = newState(s2i, complex(s2i, 0)*1i)
+	minusI *State = newState(s2i, -complex(s2i, 0)*1i)
 )
 
+func StateZero()   *State { return zero }
+func StateOne()    *State { return one }
+func StatePlus()   *State { return plus }
+func StateMinus()  *State { return minus }
+func StatePlusI()  *State { return plusI }
+func StateMinusI() *State { return minusI }
+
 // a|0> + b|1>
+// a is a non-negative number
+// If a is zero, b is a positive number
 type State struct {
 	a float64
 	b complex128
 }
+
+func (x *State) A() float64   {	return x.a }
+func (x *State) B() complex128 { return x.b }
 
 // a and b must satisfy that a >= 0 and |a|^2 + |b|^2 == 1.
 // If a == 0, b > 0.
@@ -49,25 +57,34 @@ func NewState(a, b complex128) *State {
 	aAbs, bAbs := Abs(a), Abs(b)
 	norm := math.Sqrt(aAbs*aAbs + bAbs*bAbs)  // = √(|a|^2 + |b|^2)
 	newA := aAbs/norm  // = |a|/norm
-	newB := toComplex(newA)*b/a  // | b|a|/(a*norm)
+	newB := complex(newA, 0)*b/a  // | b|a|/(a*norm)
 	return newState(newA, newB)
 }
 
+// <x|y>
 func (x *State) Prod(y *State) complex128 {
-  return toComplex(x.a * y.a) + Conj(x.b) * y.b
+	return complex(x.a* y.a, 0) + Conj(x.b) * y.b
 }
 
+// |<x|y>|
 func (x *State) Amplitude(y *State) float64 {
 	return Abs(x.Prod(y))
 }
 
+// |<x|y>|^2
 func (x *State) Probability(y *State) float64 {
 	amp := x.Amplitude(y)
 	return amp*amp
 }
 
+// |<x|y>| == 1 (|<x|y>| >= 1-delta)
 func (x *State) EqualState(y *State, delta float64) bool {
-	return x.Probability(y) >= 1-delta
+	return x.Amplitude(y) >= 1-delta
+}
+
+// |<x|y>| == 0 (|<x|y>| <= delta)
+func (x *State) IsOrthogonalTo(y *State, delta float64) bool {
+	return x.Amplitude(y) <= delta
 }
 
 func (s *State) String() string {
@@ -79,21 +96,38 @@ func (s *State) String() string {
 
 	} else {
 		// Both a and b are non-zero
-		if imag(s.b) == 0 {
-			if re_b := real(s.b); re_b > 0 {
+		re_b, im_b := real(s.b), imag(s.b)
+		if im_b == 0 {
+			if s.a == re_b {
+				return "|+>"
+
+			} else if s.a == -re_b {
+				return "|->"
+
+			} else if re_b > 0 {
 				return fmt.Sprintf("%v|0> + %v|1>", s.a, re_b)
+
 			}else{
 				return fmt.Sprintf("%v|0> - %v|1>", s.a, -re_b)
+
 			}
 
-		} else if real(s.b) == 0 {
-			if im_b := imag(s.b); im_b > 0 {
+		} else if re_b == 0 {
+			if s.a == im_b {
+				return "|+i>"
+
+			} else if s.a == -im_b {
+				return "|-i>"
+
+			} else if im_b := imag(s.b); im_b > 0 {
 				return fmt.Sprintf("%v|0> + %vi|1>", s.a, im_b)
+
 			}else{
 				return fmt.Sprintf("%v|0> - %vi|1>", s.a, -im_b)
+
 			}
 		}
 
-	  return fmt.Sprintf("%v|0> + %v|1>", s.a, s.b)
+		return fmt.Sprintf("%v|0> + %v|1>", s.a, s.b)
 	}
 }
