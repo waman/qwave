@@ -1,4 +1,4 @@
-package qubit
+package state
 
 import (
 	. "math/cmplx"
@@ -19,12 +19,12 @@ var (
 	minusI *State = newState(s2i, -complex(s2i, 0)*1i)
 )
 
-func StateZero()   *State { return zero }
-func StateOne()    *State { return one }
-func StatePlus()   *State { return plus }
-func StateMinus()  *State { return minus }
-func StatePlusI()  *State { return plusI }
-func StateMinusI() *State { return minusI }
+func Zero()   *State { return zero }
+func One()    *State { return one }
+func Plus()   *State { return plus }
+func Minus()  *State { return minus }
+func PlusI()  *State { return plusI }
+func MinusI() *State { return minusI }
 
 // a|0> + b|1>
 // a is a non-negative number
@@ -43,7 +43,7 @@ func newState(a float64, b complex128) *State{
 	return &State{a, b}
 }
 
-func NewState(a, b complex128) *State {
+func New(a, b complex128) *State {
 	if b == 0 {
 		if a == 0 {
 			log.Panicf("Both coefficients are zero.")
