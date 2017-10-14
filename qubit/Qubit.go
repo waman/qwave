@@ -4,18 +4,28 @@ import (
 	"math/rand"
 	"github.com/waman/qwave/qubit/state"
 	"github.com/waman/qwave/qubit/basis"
+	"sync"
 )
 
 type Qubit interface{
+	State() *state.State
 	Observe(basis *basis.Basis) *state.State
 }
 
+func (dq *defaultQubit) State() *state.State {
+	return dq.state
+}
+
 type defaultQubit struct {
+	mu    sync.Mutex
 	state *state.State
 }
 
-func (qubit *defaultQubit) Observe(basis *basis.Basis) *state.State {
-  prob := qubit.state.Probability(basis.First())
+func (qbt *defaultQubit) Observe(basis *basis.Basis) *state.State {
+	qbt.mu.Lock()
+	defer qbt.mu.Unlock()
+
+  prob := qbt.state.Probability(basis.First())
 
   var nextState *state.State
   if p := rand.Float64(); p < prob {
@@ -24,7 +34,7 @@ func (qubit *defaultQubit) Observe(basis *basis.Basis) *state.State {
 		nextState = basis.Second()
 	}
 
-	qubit.state = nextState
+	qbt.state = nextState
 	return nextState
 }
 
@@ -33,7 +43,8 @@ func New(a, b complex128) Qubit {
 }
 
 func NewWithState(state *state.State) Qubit {
-	var qubit Qubit = &defaultQubit{state}
+	var mu sync.Mutex
+	var qubit Qubit = &defaultQubit{mu, state}
 	return qubit
 }
 

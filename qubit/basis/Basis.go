@@ -39,11 +39,11 @@ func (basis *Basis) Second() *state.State {
 	return basis.second
 }
 
-// Stats() returns a copy of state array.
+// States() returns a copy of state array.
 func (basis *Basis) States() [2]*state.State {
 	return [2]*state.State{ basis.first, basis.second}
 }
 
 func (basis *Basis) String() string {
-	return fmt.Sprint("{%v, %v}", basis.first, basis.second)
+	return fmt.Sprintf("{%v, %v}", basis.first, basis.second)
 }

@@ -1,11 +1,11 @@
 package bb84
 
-import "math/rand"
-
-func NewRandomBit(n int) []bool {
-	bs := make([]bool, n)
-	for i := 0; i < n; i++ {
-		bs[i] = rand.Intn(1) == 1
+func AppendMatchingBit(key, bits, matches []bool, max int) []bool {
+	for i, match := range matches {
+		if match {
+			key = append(key, bits[i])
+			if len(key) == max { break}
+		}
 	}
-	return bs
+	return key
 }
