@@ -18,7 +18,7 @@ func NewBob(n int) *Bob {
 
 func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob, done chan<- struct{}){
 	for len(bob.key) < bob.n {
-		bases := qkd.NewRandomBit(bob.n)
+		bases := qkd.NewRandomBitSimply(bob.n)
 
 		bits := observeQubits(bases, ch.Qch())
 		ch.ToAlice() <- nil
