@@ -1,7 +1,7 @@
 package bb84
 
 import (
-	"github.com/waman/qwave/qubit"
+	"github.com/waman/qwave/system/qubit"
 	"github.com/waman/qwave/qkd"
 )
 
@@ -14,10 +14,10 @@ func NewAlice(n int) *Alice {
   return &Alice{n, nil}
 }
 
-func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice, done chan<- struct{}){
+func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
-		bits  := qkd.NewRandomBitSimply(alice.n)
-		bases := qkd.NewRandomBitSimply(alice.n)
+		bits  := qkd.NewRandomBit(alice.n)
+		bases := qkd.NewRandomBit(alice.n)
 
 		sendQubits(bits, bases, ch.Qch())
 		<- ch.FromBob()
@@ -26,7 +26,6 @@ func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice, done chan<- struct{}){
 		matches := <- ch.FromBob()
 		alice.key = AppendMatchingBit(alice.key, bits, matches, alice.n)
 	}
-	done <- struct{}{}
 }
 
 func sendQubits(bits, bases []bool, qch chan<- []qubit.Qubit){

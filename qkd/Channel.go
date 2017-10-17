@@ -1,33 +1,43 @@
 package qkd
 
 import (
-	"github.com/waman/qwave/qubit"
+	"github.com/waman/qwave/system/qubit"
 )
 
-type Channel struct {
+type Channel interface {
+	OnAlice() ChannelOnAlice
+	OnBob()   ChannelOnBob
+	Close()
+}
+
+type channel struct {
 	qch chan []qubit.Qubit
 	aliceToBob chan []bool
 	bobToAlice chan []bool
 }
 
-func NewChannel() *Channel {
+func NewChannel() Channel {
 	qch := make(chan []qubit.Qubit)
 	aliceToBob := make(chan []bool)
 	bobToAlice := make(chan []bool)
-	return &Channel{qch, aliceToBob, bobToAlice}
+	return &channel{qch, aliceToBob, bobToAlice}
 }
 
-func (ch *Channel) Close(){
+func (ch *channel) OnAlice() ChannelOnAlice {
+	return &chOnAlice{ch.qch, ch.aliceToBob, ch.bobToAlice}
+}
+
+func (ch *channel) OnBob() ChannelOnBob {
+	return &chOnBob{ch.qch, ch.bobToAlice, ch.aliceToBob}
+}
+
+func (ch *channel) Close(){
 	close(ch.qch)
 	close(ch.aliceToBob)
 	close(ch.bobToAlice)
 }
 
 //***** OnAlice *****
-func (ch *Channel) OnAlice() ChannelOnAlice {
-	return &chOnAlice{ch.qch, ch.aliceToBob, ch.bobToAlice}
-}
-
 type ChannelOnAlice interface {
 	Qch() chan<- []qubit.Qubit
 	ToBob() chan<- []bool
@@ -57,10 +67,6 @@ type ChannelOnBob interface {
 	Qch() <-chan []qubit.Qubit
 	ToAlice() chan<- []bool
 	FromAlice() <-chan []bool
-}
-
-func (ch *Channel) OnBob() ChannelOnBob {
-	return &chOnBob{ch.qch, ch.bobToAlice, ch.aliceToBob}
 }
 
 type chOnBob struct {

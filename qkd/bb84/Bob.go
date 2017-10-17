@@ -1,10 +1,10 @@
 package bb84
 
 import (
-	"github.com/waman/qwave/qubit/basis"
-	"github.com/waman/qwave/qubit/state"
+	"github.com/waman/qwave/system/qubit/basis"
+	"github.com/waman/qwave/system/qubit/ket"
 	"github.com/waman/qwave/qkd"
-	"github.com/waman/qwave/qubit"
+	"github.com/waman/qwave/system/qubit"
 )
 
 type Bob struct{
@@ -16,9 +16,9 @@ func NewBob(n int) *Bob {
   return &Bob{n, nil}
 }
 
-func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob, done chan<- struct{}){
+func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob){
 	for len(bob.key) < bob.n {
-		bases := qkd.NewRandomBitSimply(bob.n)
+		bases := qkd.NewRandomBit(bob.n)
 
 		bits := observeQubits(bases, ch.Qch())
 		ch.ToAlice() <- nil
@@ -27,7 +27,6 @@ func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob, done chan<- struct{}){
 		ch.ToAlice() <- matches
 		bob.key = AppendMatchingBit(bob.key, bits, matches, bob.n)
 	}
-	done <- struct{}{}
 }
 
 func observeQubits(bases []bool, ch <-chan []qubit.Qubit) []bool {
@@ -36,11 +35,11 @@ func observeQubits(bases []bool, ch <-chan []qubit.Qubit) []bool {
 		if bases[i] {  // 1 -> observing by the Hadamard basis
 			// |-> -> 1
 			// |+> -> 0
-			bits[i] = qbt.Observe(basis.Hadamard()) == state.Minus()
+			bits[i] = qbt.Observe(basis.Hadamard()) == ket.Minus()
 		}else{  // 0 -> observing by the standard basis
 			// |1> -> 1
 			// |0> -> 0
-			bits[i] = qbt.Observe(basis.Standard()) == state.One()
+			bits[i] = qbt.Observe(basis.Standard()) == ket.One()
 		}
 	}
 	return bits
