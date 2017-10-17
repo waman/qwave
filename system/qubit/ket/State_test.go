@@ -1,7 +1,9 @@
-package state
+package ket
 
 import (
 	"testing"
+	"fmt"
+	"math"
 )
 
 const delta float64 = 1e-10
@@ -62,4 +64,24 @@ func TestStringMethod(t *testing.T){
 			t.Errorf("%d番目：(%q).String() != %s", i, got, test.want)
 		}
 	}
+}
+
+func Example(){
+	zero  := Zero()
+	one   := One()
+	plus  := Plus()
+	minus := Minus()
+
+	s := New(1, 1)
+
+	delta := 1e-10
+	fmt.Println(s.EqualState(plus, delta))
+	fmt.Println(zero.IsOrthogonalTo(one, 1e-10))
+
+	p := zero.Probability(minus)
+	fmt.Println(math.Abs(p - 0.5) <= delta)
+	// Output:
+	// true
+	// true
+	// true
 }

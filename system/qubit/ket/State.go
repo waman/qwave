@@ -1,4 +1,4 @@
-package state
+package ket
 
 import (
 	. "math/cmplx"
@@ -79,6 +79,7 @@ func (x *State) Probability(y *State) float64 {
 
 // |<x|y>| == 1 (|<x|y>| >= 1-delta)
 func (x *State) EqualState(y *State, delta float64) bool {
+	if x == y { return true }
 	return x.Amplitude(y) >= 1-delta
 }
 
