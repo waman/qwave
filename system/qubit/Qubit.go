@@ -42,9 +42,9 @@ func NewWith(state *ket.State) Qubit {
 	return &defaultQubit{mu, state}
 }
 
-func NewZero()   Qubit { return NewWith(ket.Zero()) }
-func NewOne()    Qubit { return NewWith(ket.One()) }
-func NewPlus()   Qubit { return NewWith(ket.Plus()) }
-func NewMinus()  Qubit { return NewWith(ket.Minus()) }
-func NewPlusI()  Qubit { return NewWith(ket.PlusI()) }
-func NewMinusI() Qubit { return NewWith(ket.MinusI()) }
+func NewZero()   Qubit { return NewWith(ket.Zero) }
+func NewOne()    Qubit { return NewWith(ket.One) }
+func NewPlus()   Qubit { return NewWith(ket.Plus) }
+func NewMinus()  Qubit { return NewWith(ket.Minus) }
+func NewPlusI()  Qubit { return NewWith(ket.PlusI) }
+func NewMinusI() Qubit { return NewWith(ket.MinusI) }

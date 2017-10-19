@@ -15,3 +15,7 @@ func (key Key) String() string {
 	}
 	return buf.String()
 }
+
+type KeyContainer interface {
+	Key() Key
+}

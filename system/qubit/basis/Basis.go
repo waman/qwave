@@ -7,14 +7,10 @@ import (
 )
 
 var(
-	standard  *Basis = newBasis(ket.Zero(), ket.One())
-	hadamard  *Basis = newBasis(ket.Plus(), ket.Minus())
-	imaginary *Basis = newBasis(ket.PlusI(), ket.MinusI())
+	Standard  *Basis = newBasis(ket.Zero, ket.One)
+	Hadamard  *Basis = newBasis(ket.Plus, ket.Minus)
+	Imaginary *Basis = newBasis(ket.PlusI, ket.MinusI)
 )
-
-func Standard()  *Basis { return standard }
-func Hadamard()  *Basis { return hadamard }
-func Imaginary() *Basis { return imaginary}
 
 func newBasis(first, second *ket.State) *Basis {
 	return &Basis{first, second}

@@ -18,22 +18,43 @@ func (eve *Eve) Key() qkd.Key {
 	return eve.key
 }
 
-func (eve *Eve) Eavsedrop(chWithAlice qkd.ChannelOnBob, chWithBob qkd.ChannelOnAlice) {
+func (eve *Eve) Eavsedrop(in *qkd.InternalOfChannel) {
 	nKey := 0
 	for nKey < eve.n {
-		qubits := <- chWithAlice.Qch()
-		for _, qubit := range qubits {
-			qubit.Observe(basis.Standard())
-		}
-		chWithBob.Qch() <- qubits
+		select {
+		case qubits := <- in.QchFromAlice():
+			for _, qbt := range qubits {
+				qbt.Observe(basis.Standard)
+			}
+			in.QchToBob() <- qubits
 
-		chWithAlice.ToAlice() <- <- chWithBob.FromBob()  // nil
-		chWithBob.ToBob() <- <- chWithAlice.FromAlice()  // bases
+		case bits := <- in.FromAlice():
+			in.ToBob() <- bits
 
-		matches := <- chWithBob.FromBob()
-		for _, match := range matches {
-			if match { nKey++ }
+		case bits := <- in.FromBob():
+			if len(bits) > 0 {
+				for _, match := range bits {
+					if match { nKey++ }
+				}
+			}
+			in.ToAlice() <- bits
 		}
-		chWithAlice.ToAlice() <- matches
 	}
+
+	//for nKey < eve.n {
+	//	in.EavsedropQubits(func(qbts []qubit.Qubit){
+	//		for _, qbt := range qbts {
+	//			qbt.Observe(basis.Standard)
+	//	  }
+	//	})
+	//
+	//	in.ForwardBtoA() // nil
+	//	in.ForwardAtoB() // bases
+	//
+	//	in.EavsedropBtoA(func(matches []bool){
+	//		for _, match := range matches {
+	//			if match { nKey++ }
+	//		}
+	//	})
+	//}
 }

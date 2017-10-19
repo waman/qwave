@@ -14,9 +14,9 @@ func ExampleBasisNew(){
 }
 
 func ExampleBasisMethods(){
-	b := Standard()
-	fmt.Println(b.First() == ket.Zero())
-	fmt.Println(b.Second() == ket.One())
+	b := Standard
+	fmt.Println(b.First() == ket.Zero)
+	fmt.Println(b.Second() == ket.One)
 	// Output:
 	// true
 	// true

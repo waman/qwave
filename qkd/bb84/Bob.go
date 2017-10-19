@@ -35,11 +35,11 @@ func observeQubits(bases []bool, ch <-chan []qubit.Qubit) []bool {
 		if bases[i] {  // 1 -> observing by the Hadamard basis
 			// |-> -> 1
 			// |+> -> 0
-			bits[i] = qbt.Observe(basis.Hadamard()) == ket.Minus()
+			bits[i] = qbt.Observe(basis.Hadamard) == ket.Minus
 		}else{  // 0 -> observing by the standard basis
 			// |1> -> 1
 			// |0> -> 0
-			bits[i] = qbt.Observe(basis.Standard()) == ket.One()
+			bits[i] = qbt.Observe(basis.Standard) == ket.One
 		}
 	}
 	return bits

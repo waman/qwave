@@ -11,22 +11,15 @@ import (
 var s2i float64 = 1/math.Sqrt(2)
 
 var (
-	zero   *State = newState(1, 0)
-	one    *State = newState(0, 1)
-	plus   *State = newState(s2i, complex(s2i, 0))
-	minus  *State = newState(s2i, -complex(s2i, 0))
-	plusI  *State = newState(s2i, complex(s2i, 0)*1i)
-	minusI *State = newState(s2i, -complex(s2i, 0)*1i)
+	Zero   *State = newState(1, 0)
+	One    *State = newState(0, 1)
+	Plus   *State = newState(s2i, complex(s2i, 0))
+	Minus  *State = newState(s2i, -complex(s2i, 0))
+	PlusI  *State = newState(s2i, complex(s2i, 0)*1i)
+	MinusI *State = newState(s2i, -complex(s2i, 0)*1i)
 )
 
-func Zero()   *State { return zero }
-func One()    *State { return one }
-func Plus()   *State { return plus }
-func Minus()  *State { return minus }
-func PlusI()  *State { return plusI }
-func MinusI() *State { return minusI }
-
-// a|0> + b|1>
+// State represent an immutable ket vector a|0> + b|1>
 // a is a non-negative number
 // If a is zero, b is a positive number
 type State struct {

@@ -15,7 +15,7 @@ func TestEquality(t *testing.T){
 
 func TestObserve(t *testing.T){
 	qbt := NewPlus()
-	std := basis.Standard()
+	std := basis.Standard
 	result := qbt.Observe(std)
 	if !(result == std.First() ||	result == std.Second()){
 		t.Errorf("Observe method")
@@ -24,7 +24,7 @@ func TestObserve(t *testing.T){
 
 func TestObserveInTheSameBasis(t *testing.T){
 	qbt := NewPlus()
-	std := basis.Standard()
+	std := basis.Standard
 	result := qbt.Observe(std)
 	for i := 0; i < 100; i++ {
 		if qbt.Observe(std) != result {
