@@ -5,30 +5,32 @@ import (
 	"github.com/waman/qwave/qkd"
 )
 
+func NewAlice(n int) *Alice {
+	return &Alice{n, nil}
+}
+
 type Alice struct{
 	n int
 	key qkd.Key
 }
 
-func NewAlice(n int) *Alice {
-  return &Alice{n, nil}
+func (alice *Alice) Key() qkd.Key {
+	return alice.key
 }
 
 func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
-		bits  := qkd.NewRandomBit(alice.n)
-		bases := qkd.NewRandomBit(alice.n)
+		bits  := qkd.NewRandomBits(qkd.ProperBitCount)
+		bases := qkd.NewRandomBits(qkd.ProperBitCount)
 
-		sendQubits(bits, bases, ch.Qch())
-		<- ch.FromBob()
-
-		ch.ToBob() <- bases
-		matches := <- ch.FromBob()
-		alice.key = AppendMatchingBit(alice.key, bits, matches, alice.n)
+		ch.Qch() <- encode(bits, bases)
+		matches := matchBases(bases, <- ch.FromBob())
+		ch.ToBob() <- matches
+		alice.key = qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
 	}
 }
 
-func sendQubits(bits, bases []bool, qch chan<- []qubit.Qubit){
+func encode(bits, bases []bool) []qubit.Qubit {
 	var qubits = make([]qubit.Qubit, len(bits))
 	for i, bit := range bits {
 		if bases[i] {  // 1 -> encoding by the Hadamard basis
@@ -50,9 +52,13 @@ func sendQubits(bits, bases []bool, qch chan<- []qubit.Qubit){
 			}
 		}
 	}
-	qch <- qubits
+	return qubits
 }
 
-func (alice *Alice) Key() qkd.Key {
-  return alice.key
+func matchBases(bases, bobsBases []bool) []bool {
+	var match = make([]bool, len(bases))
+	for i, basis := range bases {
+		match[i] = basis == bobsBases[i]
+	}
+	return match
 }

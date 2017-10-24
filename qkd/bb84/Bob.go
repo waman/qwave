@@ -7,31 +7,34 @@ import (
 	"github.com/waman/qwave/system/qubit"
 )
 
+func NewBob(n int) *Bob {
+	return &Bob{n, nil}
+}
+
 type Bob struct{
 	n int
 	key qkd.Key
 }
 
-func NewBob(n int) *Bob {
-  return &Bob{n, nil}
+func (bob *Bob) Key() qkd.Key {
+	return bob.key
 }
 
 func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob){
 	for len(bob.key) < bob.n {
-		bases := qkd.NewRandomBit(bob.n)
+		qbts := <-ch.Qch()
+		bases := qkd.NewRandomBits(len(qbts))
+		bits := decode(qbts, bases)
+		ch.ToAlice() <- bases
 
-		bits := observeQubits(bases, ch.Qch())
-		ch.ToAlice() <- nil
-
-		matches := matchBases(bases, ch.FromAlice())
-		ch.ToAlice() <- matches
-		bob.key = AppendMatchingBit(bob.key, bits, matches, bob.n)
+		matches := <- ch.FromAlice()
+		bob.key = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
 	}
 }
 
-func observeQubits(bases []bool, ch <-chan []qubit.Qubit) []bool {
-	bits := make([]bool, len(bases))
-	for i, qbt := range <- ch {
+func decode(qbts []qubit.Qubit, bases []bool) []bool {
+	bits := make([]bool, len(qbts))
+	for i, qbt := range qbts {
 		if bases[i] {  // 1 -> observing by the Hadamard basis
 			// |-> -> 1
 			// |+> -> 0
@@ -43,18 +46,4 @@ func observeQubits(bases []bool, ch <-chan []qubit.Qubit) []bool {
 		}
 	}
 	return bits
-}
-
-func matchBases(bases []bool, ch <-chan []bool) []bool {
-	var match = make([]bool, len(bases))
-	i := 0
-	for _, trueBasis := range <- ch {
-		match[i] = trueBasis == bases[i]
-    i++
-	}
-	return match
-}
-
-func (bob *Bob) Key() qkd.Key {
-	return bob.key
 }

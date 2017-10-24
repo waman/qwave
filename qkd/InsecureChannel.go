@@ -40,11 +40,11 @@ func (in *InternalOfChannel) WithBob() ChannelOnAlice {
 	return in.withBob
 }
 
-func (in *InternalOfChannel) QchFromAlice() <-chan []qubit.Qubit {
+func (in *InternalOfChannel) QubitsFromAlice() <-chan []qubit.Qubit {
 	return in.withAlice.Qch()
 }
 
-func (in *InternalOfChannel) QchToBob() chan<- []qubit.Qubit {
+func (in *InternalOfChannel) QubitsToBob() chan<- []qubit.Qubit {
 	return in.withBob.Qch()
 }
 

@@ -17,9 +17,9 @@ type channel struct {
 }
 
 func NewChannel() Channel {
-	qch := make(chan []qubit.Qubit, 1)
-	aliceToBob := make(chan []bool, 1)
-	bobToAlice := make(chan []bool, 1)
+	qch := make(chan []qubit.Qubit)
+	aliceToBob := make(chan []bool)
+	bobToAlice := make(chan []bool)
 	return &channel{qch, aliceToBob, bobToAlice}
 }
 

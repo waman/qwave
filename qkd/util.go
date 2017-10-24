@@ -14,19 +14,19 @@ import (
 //	return bs
 //}
 
-const pcBitMinus1 = (32 << (^uint(0) >> 63)) - 1 // == 31 or 63
+const ProperBitCount = (32 << (^uint(0) >> 63)) - 1 // == 31 or 63
 
-func NewRandomBit(n int) []bool {
+func NewRandomBits(n int) []bool {
 	bs := make([]bool, n)
 	index := 0
 	for {
 		var max int
 		var isLast bool
-		if m := n-index; m <= pcBitMinus1 {
+		if m := n-index; m <= ProperBitCount {
 			max = m
 			isLast = true
 		}else{
-			max = pcBitMinus1
+			max = ProperBitCount
 			isLast = false
 		}
 
@@ -42,6 +42,16 @@ func NewRandomBit(n int) []bool {
 	return bs
 }
 
+func AppendMatchingBits(key, bits, matches []bool, max int) []bool {
+	for i, match := range matches {
+		if match {
+			key = append(key, bits[i])
+			if len(key) == max { break }
+		}
+	}
+	return key
+}
+
 func EstablishKey(kc KeyContainer, ch Channel, done chan<- struct{}){
 	if alice, ok := kc.(Alice); ok {
 		alice.EstablishKey(ch.OnAlice())
@@ -54,11 +64,6 @@ func EstablishKey(kc KeyContainer, ch Channel, done chan<- struct{}){
 	}else{
 		log.Panicf("KeyContainer must be qkd.Alice or qkd.Bob: %T", kc)
 	}
-}
-
-func EavseDrop(eve Eve, ch *InsecureChannel, done chan<- struct{}){
-	eve.Eavsedrop(ch.Internal())
-	done <- struct{}{}
 }
 
 func ManipulateQch(

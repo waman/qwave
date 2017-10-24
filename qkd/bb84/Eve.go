@@ -5,56 +5,41 @@ import (
 	"github.com/waman/qwave/system/qubit/basis"
 )
 
+func NewEve() *Eve {
+	return &Eve{make(chan struct{})}
+}
+
 type Eve struct {
-	n int
-	key qkd.Key
+	done chan struct{}
 }
 
-func NewEve(n int) *Eve {
-  return &Eve{n, nil}
+func (eve *Eve) Stop(){
+	eve.done <- struct{}{}
 }
 
-func (eve *Eve) Key() qkd.Key {
-	return eve.key
-}
-
-func (eve *Eve) Eavsedrop(in *qkd.InternalOfChannel) {
-	nKey := 0
-	for nKey < eve.n {
-		select {
-		case qubits := <- in.QchFromAlice():
-			for _, qbt := range qubits {
-				qbt.Observe(basis.Standard)
-			}
-			in.QchToBob() <- qubits
-
-		case bits := <- in.FromAlice():
-			in.ToBob() <- bits
-
-		case bits := <- in.FromBob():
-			if len(bits) > 0 {
-				for _, match := range bits {
-					if match { nKey++ }
+func (eve *Eve) Eavesdrop(in *qkd.InternalOfChannel) {
+	loop:
+		for {
+			select {
+			case qbts := <-in.QubitsFromAlice():
+				bases := qkd.NewRandomBits(len(qbts))
+				for i, qbt := range qbts {
+					if bases[i] {
+						qbt.Observe(basis.Hadamard)
+					} else {
+						qbt.Observe(basis.Standard)
+					}
 				}
-			}
-			in.ToAlice() <- bits
-		}
-	}
+				in.QubitsToBob() <- qbts
 
-	//for nKey < eve.n {
-	//	in.EavsedropQubits(func(qbts []qubit.Qubit){
-	//		for _, qbt := range qbts {
-	//			qbt.Observe(basis.Standard)
-	//	  }
-	//	})
-	//
-	//	in.ForwardBtoA() // nil
-	//	in.ForwardAtoB() // bases
-	//
-	//	in.EavsedropBtoA(func(matches []bool){
-	//		for _, match := range matches {
-	//			if match { nKey++ }
-	//		}
-	//	})
-	//}
+			case bits := <-in.FromAlice():
+				in.ToBob() <- bits
+
+			case bits := <-in.FromBob():
+				in.ToAlice() <- bits
+
+			case <-eve.done:
+				break loop
+			}
+		}
 }
