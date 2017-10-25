@@ -2,19 +2,12 @@ package qkd
 
 import (
 	"math/rand"
-	"github.com/waman/qwave/system/qubit"
 	"log"
+	"time"
 )
 
-//func NewRandomBitSimply(n int) []bool {
-//	bs := make([]bool, n)
-//	for i := 0; i < n; i++ {
-//		bs[i] = rand.Intn(2) == 1  // [0, 2) => 0 or 1
-//	}
-//	return bs
-//}
-
-const ProperBitCount = (32 << (^uint(0) >> 63)) - 1 // == 31 or 63
+// ProperBitCount == 31 or 63 (PC-bit dependent)
+const ProperBitCount = (32 << (^uint(0) >> 63)) - 1
 
 func NewRandomBits(n int) []bool {
 	bs := make([]bool, n)
@@ -42,14 +35,23 @@ func NewRandomBits(n int) []bool {
 	return bs
 }
 
-func AppendMatchingBits(key, bits, matches []bool, max int) []bool {
+// AppendMatchingBits function append the i-th bit of 'bits' to 'key'
+// if the i-th bit of 'matches' is true.
+// If the length of key reaches to 'max', the control is returned.
+//
+// The first returned value is the new key.
+// This is substituted to the 'key' variable like append function to slice.
+// The second returned value is consumed bits when appended. This contains discarded bits.
+func AppendMatchingBits(key, bits, matches []bool, max int) ([]bool, int) {
 	for i, match := range matches {
 		if match {
 			key = append(key, bits[i])
-			if len(key) == max { break }
+			if len(key) == max {
+				return key, i
+			}
 		}
 	}
-	return key
+	return key, len(bits)
 }
 
 func EstablishKey(kc KeyContainer, ch Channel, done chan<- struct{}){
@@ -66,20 +68,41 @@ func EstablishKey(kc KeyContainer, ch Channel, done chan<- struct{}){
 	}
 }
 
-func ManipulateQch(
-	  from ChannelOnBob, to ChannelOnAlice, f func(qubits []qubit.Qubit)[]qubit.Qubit){
-	qubits := <- from.Qch()
-	to.Qch() <- f(qubits)
+func EstablishKeys(alice Alice, bob Bob) (aliceKey, bobKey Key) {
+	rand.Seed(time.Now().UnixNano())
+
+	ch := NewChannel()
+	defer ch.Close()
+	done := make(chan struct{}, 2)
+
+	go EstablishKey(alice, ch, done)
+
+	go EstablishKey(bob, ch, done)
+
+	<-done
+	<-done
+
+	return alice.Key(), bob.Key()
 }
 
-func ManipulateAlicesMessage(
-	  from ChannelOnBob, to ChannelOnAlice, f func(qubits []bool)[]bool){
-	bits := <- from.FromAlice()
-	to.ToBob() <- f(bits)
-}
+func EstablishKeysWithEavesdropping(alice Alice, bob Bob, eve Eve) (aliceKey, bobKey, eveKey Key) {
+	rand.Seed(time.Now().UnixNano())
 
-func ManipulateBobsMessage(
-	  from ChannelOnAlice, to ChannelOnBob, f func(qubits []bool)[]bool){
-	bits := <- from.FromBob()
-	to.ToAlice() <- f(bits)
+	ch := NewInsecureChannel()
+	defer ch.Close()
+	done := make(chan struct{}, 2)
+
+	go eve.Eavesdrop(ch.Internal())
+	go EstablishKey(alice, ch, done)
+	go EstablishKey(bob, ch, done)
+
+	<-done
+	<-done
+	eve.Stop()
+
+	if e, ok := eve.(KeyContainer); ok {
+		return alice.Key(), bob.Key(), e.Key()
+	} else {
+		return alice.Key(), bob.Key(),nil
+	}
 }

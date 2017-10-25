@@ -1,4 +1,4 @@
-package bb84
+package b92
 
 import (
 	"github.com/waman/qwave/system/qubit/basis"
@@ -23,27 +23,24 @@ func (bob *Bob) Key() qkd.Key {
 func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob){
 	for len(bob.key) < bob.n {
 		qbts := <-ch.Qch()
-		bases := qkd.NewRandomBits(len(qbts))
-		bits := decode(qbts, bases)
-		ch.ToAlice() <- bases
+		bits := qkd.NewRandomBits(len(qbts))
 
-		matches := <- ch.FromAlice()
+		matches := decode(qbts, bits)
+		ch.ToAlice() <- matches
+
 		bob.key, _ = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
 	}
 }
 
-func decode(qbts []qubit.Qubit, bases []bool) []bool {
-	bits := make([]bool, len(qbts))
+func decode(qbts []qubit.Qubit, bits []bool) []bool {
+	matches := make([]bool, len(qbts))
 	for i, qbt := range qbts {
-		if bases[i] {  // 1 -> observing by the Hadamard basis
-			// |-> -> 1
-			// |+> -> 0
-			bits[i] = qbt.Observe(basis.Hadamard) == ket.Minus
-		}else{  // 0 -> observing by the standard basis
-			// |1> -> 1
-			// |0> -> 0
-			bits[i] = qbt.Observe(basis.Standard) == ket.One
+		if bits[i] {  // observe in the standard basis
+			matches[i] = qbt.Observe(basis.Standard) == ket.One
+
+		} else {  // observe in the Hadamard basis
+			matches[i] = qbt.Observe(basis.Hadamard) == ket.Minus
 		}
 	}
-	return bits
+	return matches
 }

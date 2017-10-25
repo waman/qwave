@@ -5,12 +5,18 @@ import (
 	"github.com/waman/qwave/system/qubit/basis"
 )
 
-func NewEve() *Eve {
-	return &Eve{make(chan struct{})}
+func NewEve(n int) *Eve {
+	return &Eve{n, nil, make(chan struct{})}
 }
 
 type Eve struct {
+	n int
+	key qkd.Key
 	done chan struct{}
+}
+
+func (eve *Eve) Key() qkd.Key {
+	return eve.key
 }
 
 func (eve *Eve) Stop(){

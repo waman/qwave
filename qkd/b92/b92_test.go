@@ -1,4 +1,4 @@
-package bb84
+package b92
 
 import (
 	"github.com/waman/qwave/qkd"
@@ -8,7 +8,7 @@ import (
 	"math/rand"
 )
 
-func ExampleBB84Protocol(){
+func ExampleB92Protocol(){
 	n := 50
 	aliceKey, bobKey := qkd.EstablishKeys(NewAlice(n), NewBob(n))
 
@@ -29,19 +29,16 @@ type LoggingAlice struct {
 func (alice *LoggingAlice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
 		bits  := qkd.NewRandomBits(qkd.ProperBitCount)
-		bases := qkd.NewRandomBits(qkd.ProperBitCount)
+		ch.Qch() <- encode(bits)
 
-		ch.Qch() <- encode(bits, bases)
-		matches := matchBases(bases, <- ch.FromBob())
-
-		ch.ToBob() <- matches
+		matches := <- ch.FromBob()
 		newKey, m := qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
 		alice.key = newKey
 		alice.Consumed += m
 	}
 }
 
-func ExampleBB84ProtocolWithLoggingAlice(){
+func ExampleB92ProtocolWithLoggingAlice(){
 	n := 50
 	alice := &LoggingAlice{*NewAlice(n), 0}
 	aliceKey, bobKey := qkd.EstablishKeys(alice, NewBob(n))
@@ -54,10 +51,10 @@ func ExampleBB84ProtocolWithLoggingAlice(){
 	// 1
 }
 
-func ExampleBB84ProtocolWithEve(){
+func ExampleB92ProtocolWithEve(){
 	n := 50
 	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
-			NewAlice(n), NewBob(n), qkd.NewObservingEve())
+		NewAlice(n), NewBob(n), qkd.NewObservingEve())
 
 	log.Printf("Alice's key: %s", aliceKey)
 	log.Printf("Bob's key  : %s", bobKey)

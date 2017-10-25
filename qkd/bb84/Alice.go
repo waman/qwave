@@ -26,33 +26,33 @@ func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 		ch.Qch() <- encode(bits, bases)
 		matches := matchBases(bases, <- ch.FromBob())
 		ch.ToBob() <- matches
-		alice.key = qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
+		alice.key, _ = qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
 	}
 }
 
 func encode(bits, bases []bool) []qubit.Qubit {
-	var qubits = make([]qubit.Qubit, len(bits))
+	var qbts = make([]qubit.Qubit, len(bits))
 	for i, bit := range bits {
 		if bases[i] {  // 1 -> encoding by the Hadamard basis
 			// 1 -> |->
 			// 0 -> |+>
 			if bit {
-				qubits[i] = qubit.NewMinus()
+				qbts[i] = qubit.NewMinus()
 			}else{
-				qubits[i] = qubit.NewPlus()
+				qbts[i] = qubit.NewPlus()
 			}
 
 		}else{  // 0 -> encoding by the standard basis
 			// 1 -> |1>
 			// 0 -> |0>
 			if bit {
-				qubits[i] = qubit.NewOne()
+				qbts[i] = qubit.NewOne()
 			}else{
-				qubits[i] = qubit.NewZero()
+				qbts[i] = qubit.NewZero()
 			}
 		}
 	}
-	return qubits
+	return qbts
 }
 
 func matchBases(bases, bobsBases []bool) []bool {
