@@ -7,9 +7,9 @@ import (
 )
 
 var(
-	Standard  *Basis = newBasis(ket.Zero, ket.One)
-	Hadamard  *Basis = newBasis(ket.Plus, ket.Minus)
-	Imaginary *Basis = newBasis(ket.PlusI, ket.MinusI)
+	Standard  = newBasis(ket.Zero, ket.One)
+	Hadamard  = newBasis(ket.Plus, ket.Minus)
+	Imaginary = newBasis(ket.PlusI, ket.MinusI)
 )
 
 func newBasis(first, second *ket.State) *Basis {
