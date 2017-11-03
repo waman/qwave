@@ -1,7 +1,6 @@
 package bb84
 
 import (
-	"github.com/waman/qwave/system/qubit/basis"
 	"github.com/waman/qwave/system/qubit/ket"
 	"github.com/waman/qwave/qkd"
 	"github.com/waman/qwave/system/qubit"
@@ -28,7 +27,7 @@ func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob){
 		ch.ToAlice() <- bases
 
 		matches := <- ch.FromAlice()
-		bob.key, _ = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
+		bob.key = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
 	}
 }
 
@@ -38,11 +37,11 @@ func decode(qbts []qubit.Qubit, bases []bool) []bool {
 		if bases[i] {  // 1 -> observing by the Hadamard basis
 			// |-> -> 1
 			// |+> -> 0
-			bits[i] = qbt.Observe(basis.Hadamard) == ket.Minus
+			bits[i] = qbt.ObserveInHadamardBasis() == ket.Minus()
 		}else{  // 0 -> observing by the standard basis
 			// |1> -> 1
 			// |0> -> 0
-			bits[i] = qbt.Observe(basis.Standard) == ket.One
+			bits[i] = qbt.ObserveInStandardBasis() == ket.One()
 		}
 	}
 	return bits

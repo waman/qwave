@@ -2,8 +2,6 @@ package qkd
 
 import (
 	"math/rand"
-	"log"
-	"time"
 )
 
 // ProperBitCount == 31 or 63 (PC-bit dependent)
@@ -38,71 +36,80 @@ func NewRandomBits(n int) []bool {
 // AppendMatchingBits function append the i-th bit of 'bits' to 'key'
 // if the i-th bit of 'matches' is true.
 // If the length of key reaches to 'max', the control is returned.
+func AppendMatchingBits(key, bits, matches []bool, max int) []bool {
+	for i, match := range matches {
+		if match {
+			key = append(key, bits[i])
+			if len(key) == max { return key }
+		}
+	}
+	return key
+}
+
+// AppendMatchingBitsLogged function is simlar to AppendMatchingBits function
+// but returned value.
 //
 // The first returned value is the new key.
 // This is substituted to the 'key' variable like append function to slice.
 // The second returned value is consumed bits when appended. This contains discarded bits.
-func AppendMatchingBits(key, bits, matches []bool, max int) ([]bool, int) {
+func AppendMatchingBitsLogged(key, bits, matches []bool, max int) ([]bool, int) {
 	for i, match := range matches {
 		if match {
 			key = append(key, bits[i])
-			if len(key) == max {
-				return key, i
-			}
+			if len(key) == max { return key, i }
 		}
 	}
 	return key, len(bits)
 }
 
-func EstablishKey(kc KeyContainer, ch Channel, done chan<- struct{}){
-	if alice, ok := kc.(Alice); ok {
-		alice.EstablishKey(ch.OnAlice())
-		done <- struct{}{}
-
-	} else if bob, ok := kc.(Bob); ok {
-		bob.EstablishKey(ch.OnBob())
-		done <- struct{}{}
-
-	}else{
-		log.Panicf("KeyContainer must be qkd.Alice or qkd.Bob: %T", kc)
-	}
-}
-
 func EstablishKeys(alice Alice, bob Bob) (aliceKey, bobKey Key) {
-	rand.Seed(time.Now().UnixNano())
-
 	ch := NewChannel()
 	defer ch.Close()
 	done := make(chan struct{}, 2)
 
-	go EstablishKey(alice, ch, done)
+	go func(){
+		alice.EstablishKey(ch.OnAlice())
+		done <- struct{}{}
+	}()
 
-	go EstablishKey(bob, ch, done)
+	go func(){
+		bob.EstablishKey(ch.OnBob())
+		done <- struct{}{}
+	}()
 
 	<-done
 	<-done
 
-	return alice.Key(), bob.Key()
+	aliceKey = alice.Key()
+	bobKey = bob.Key()
+	return
 }
 
-func EstablishKeysWithEavesdropping(alice Alice, bob Bob, eve Eve) (aliceKey, bobKey, eveKey Key) {
-	rand.Seed(time.Now().UnixNano())
+func EstablishKeysWithEavesdropping(
+	  alice Alice, bob Bob, eve Eve) (aliceKey, bobKey, eveKey Key) {
 
 	ch := NewInsecureChannel()
 	defer ch.Close()
 	done := make(chan struct{}, 2)
 
 	go eve.Eavesdrop(ch.Internal())
-	go EstablishKey(alice, ch, done)
-	go EstablishKey(bob, ch, done)
+
+	go func(){
+		alice.EstablishKey(ch.OnAlice())
+		done <- struct{}{}
+	}()
+
+	go func(){
+		bob.EstablishKey(ch.OnBob())
+		done <- struct{}{}
+	}()
 
 	<-done
 	<-done
 	eve.Stop()
 
-	if e, ok := eve.(KeyContainer); ok {
-		return alice.Key(), bob.Key(), e.Key()
-	} else {
-		return alice.Key(), bob.Key(),nil
-	}
+	aliceKey = alice.Key()
+	bobKey = bob.Key()
+	if e, ok := eve.(KeyContainer); ok { eveKey = e.Key() }
+	return
 }

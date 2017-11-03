@@ -23,7 +23,7 @@ func (key1 Key) Equals(key2 Key) bool {
 	return key1.String() == key2.String()
 }
 
-func (key1 Key) ConcordanceRate(key2 Key) float32 {
+func (key1 Key) Concordance(key2 Key) int {
 	n := len(key1)
 	if n2 := len(key2); n2 != n {
 		log.Panicf("Two keys must have the same length: %d, %d", n, n2)
@@ -33,7 +33,11 @@ func (key1 Key) ConcordanceRate(key2 Key) float32 {
 	for i, bit1 := range key1 {
 		if bit1 == key2[i] { matched++ }
 	}
-	return float32(matched)/float32(n)
+	return matched
+}
+
+func (key1 Key) ConcordanceRate(key2 Key) float32 {
+	return float32(key1.Concordance(key2))/float32(len(key1))
 }
 
 type KeyContainer interface {

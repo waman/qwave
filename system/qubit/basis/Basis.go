@@ -7,20 +7,20 @@ import (
 )
 
 var(
-	Standard  = newBasis(ket.Zero, ket.One)
-	Hadamard  = newBasis(ket.Plus, ket.Minus)
-	Imaginary = newBasis(ket.PlusI, ket.MinusI)
+	standard  = &Basis{ket.Zero(), ket.One()}
+	hadamard  = &Basis{ket.Plus(), ket.Minus()}
+	imaginary = &Basis{ket.PlusI(), ket.MinusI()}
 )
 
-func newBasis(first, second *ket.State) *Basis {
-	return &Basis{first, second}
-}
+func Standard()  *Basis { return standard }
+func Hadamard()  *Basis { return hadamard }
+func Imaginary() *Basis { return imaginary }
 
 func New(first, second *ket.State, delta float64) *Basis {
 	if !first.IsOrthogonalTo(second, delta) {
 		log.Panicf("Two kets of a Basis must be orthogonal to each other: {%v, %v}", first, second)
 	}
-	return newBasis(first, second)
+	return &Basis{first, second}
 }
 
 type Basis struct{

@@ -2,61 +2,68 @@ package ket
 
 import (
 	"math/cmplx"
-	"fmt"
 	"math"
 	"log"
+	"math/rand"
+	"github.com/waman/qwave/system"
 )
 
 // 1/√2 (sqrt 2 inverse)
-var s2i float64 = 1/math.Sqrt(2)
+var s2i = complex(1/math.Sqrt(2), 0)
 
 var (
-	Zero   = newState(1, 0)
-	One    = newState(0, 1)
-	Plus   = newState(s2i, complex(s2i, 0))
-	Minus  = newState(s2i, -complex(s2i, 0))
-	PlusI  = newState(s2i, complex(s2i, 0)*1i)
-	MinusI = newState(s2i, -complex(s2i, 0)*1i)
+	zero   = &State{1, 0}
+	one    = &State{0, 1}
+	plus   = &State{s2i, s2i}
+	minus  = &State{s2i, -s2i}
+	plusI  = &State{s2i, s2i*1i}
+	minusI = &State{s2i, -s2i*1i}
 )
 
+func Zero()   *State { return zero }
+func One()    *State { return one }
+func Plus()   *State { return plus }
+func Minus()  *State { return minus }
+func PlusI()  *State { return plusI }
+func MinusI() *State { return minusI }
+
 // State represent an immutable ket vector a|0> + b|1>
-// a is a non-negative number
-// If a is zero, b is a positive number
 type State struct {
-	a float64
-	b complex128
+	a, b complex128
 }
 
-func (x *State) A() float64   {	return x.a }
+func (x *State) Coefficients() (complex128, complex128) {
+	return x.a, x.b
+}
+func (x *State) A() complex128 { return x.a }
 func (x *State) B() complex128 { return x.b }
 
-// a and b must satisfy that a >= 0 and |a|^2 + |b|^2 == 1.
-// If a == 0, b > 0.
-func newState(a float64, b complex128) *State{
-	return &State{a, b}
-}
-
-func New(a, b complex128) *State {
+// New function return the state a|0> + b|1> (when isNormalized is true).
+// If isNormalized is false, the returned state is (a|0> + b|1>)/√(a^2+b^2).
+func New(a, b complex128, isNormalized bool) *State {
 	if b == 0 {
 		if a == 0 {
-			log.Panicf("Both coefficients are zero.")
+			log.Panic("Both coefficients are zero.")
 		}
-		return newState(1, 0)
+		return zero
 
 	} else if a == 0 {
-		return newState(0, 1)
+		return one
 	}
 
-	aAbs, bAbs := cmplx.Abs(a), cmplx.Abs(b)
-	norm := math.Sqrt(aAbs*aAbs + bAbs*bAbs)  // = √(|a|^2 + |b|^2)
-	newA := aAbs/norm  // = |a|/norm
-	newB := complex(newA, 0)*b/a  // | b|a|/(a*norm)
-	return newState(newA, newB)
+	if isNormalized {
+		return &State{a, b}
+
+	} else {
+		aAbs, bAbs := cmplx.Abs(a), cmplx.Abs(b)
+		norm := complex(math.Sqrt(aAbs*aAbs + bAbs*bAbs), 0)  // = √(|a|^2 + |b|^2)
+		return &State{a/norm, b/norm}
+	}
 }
 
 // <x|y>
 func (x *State) Prod(y *State) complex128 {
-	return complex(x.a* y.a, 0) + cmplx.Conj(x.b) * y.b
+	return cmplx.Conj(x.a) * y.a + cmplx.Conj(x.b) * y.b
 }
 
 // |<x|y>|
@@ -90,46 +97,34 @@ func (s *State) String() string {
 
 	} else {
 		// Both a and b are non-zero
-		re_b, im_b := real(s.b), imag(s.b)
-		if im_b == 0 {
-			if s.a == re_b {
-				return "|+>"
-
-			} else if s.a == -re_b {
-				return "|->"
-
-			} else if re_b > 0 {
-				return fmt.Sprintf("%v|0> + %v|1>", s.a, re_b)
-
-			}else{
-				return fmt.Sprintf("%v|0> - %v|1>", s.a, -re_b)
-
-			}
-
-		} else if re_b == 0 {
-			if s.a == im_b {
-				return "|+i>"
-
-			} else if s.a == -im_b {
-				return "|-i>"
-
-			} else if im_b := imag(s.b); im_b > 0 {
-				return fmt.Sprintf("%v|0> + %vi|1>", s.a, im_b)
-
-			}else{
-				return fmt.Sprintf("%v|0> - %vi|1>", s.a, -im_b)
-
-			}
+		if s.b == s.a {
+			return "|+>"
+		} else if s.b == -s.a {
+			return "|->"
+		} else if s.b == s.a*1i {
+			return "|+i>"
+		} else if s.b == -s.a*1i {
+			return "|-i>"
 		}
-
-		return fmt.Sprintf("%v|0> + %v|1>", s.a, s.b)
 	}
+
+	return system.ToString(s.Coefficients())
 }
 
+// Polar method returns the polar coordinates on the Bloch sphere.
 // a|0> + b|1> -> (2*Acos(a), Phase(b))   (Phase(b) = Atan(b_i/b_r))
 func (s *State) Polar() (theta, phi float64) {
-	theta = math.Acos(s.a)*2
-	phi = cmplx.Phase(s.b)
+	if s.b == 0 {
+		return 0, 0
+	} else if s.a == 0 {
+		return math.Pi, 0
+	}
+
+	phase := s.a/complex(cmplx.Abs(s.a), 0)  // a/|a|
+	a, b := s.a/phase, s.b/phase
+
+	theta = math.Acos(real(a))*2
+	phi = cmplx.Phase(b)
 	if phi < 0 {
 		phi += math.Pi*2
 	}
@@ -139,9 +134,9 @@ func (s *State) Polar() (theta, phi float64) {
 // (theta, phi) -> cos(theta/2)|0> + exp[i*phi]*sin(theta/2)|1>
 func ByPolar(theta, phi float64) *State {
 	if theta == 0 {
-		return Zero
+		return Zero()
 	} else if theta == math.Pi {
-		return One
+		return One()
 	}// else if theta == math.Pi/2 {
 	//	if phi == 0 {
 	//		return Plus
@@ -155,31 +150,36 @@ func ByPolar(theta, phi float64) *State {
 	//}
 
 	s, c := math.Sincos(theta/2)
-	return newState(c, cmplx.Exp(complex(0, phi))*complex(s, 0))
+	return &State{complex(c, 0), cmplx.Exp(complex(0, phi))*complex(s, 0)}
 }
 
-// a|0> + b|1> -> ab/(1-a^2)
-// |0> -> cmplx.Nan()
+// a|0> + b|1> -> b/a
+// |0> -> cmplx.Inf()
 // |1> -> 0
 func (s *State) Complex() complex128 {
-	if s.a == 0 {
-		return 0
-	} else if s.a == 1 {
-		return cmplx.Inf()
-	}
-
-  return complex(s.a/(1-s.a*s.a), 0)*s.b
+  return s.b/s.a
 }
 
-// c -> |c|/√(|c|^2+1)|0> + c/(|c|√(|c|^2+1))|1>
+// c -> 1/√(1+|c|^2)|0> + (c/√(1+|c|^2))|1>
 func ByComplex(c complex128) *State {
   if cmplx.IsInf(c) {
-  	return Zero
+  	return Zero()
 	} else if c == 0 {
-		return One
+		return One()
 	}
 
 	cAbs := cmplx.Abs(c)
-	f := 1/math.Sqrt(cAbs*cAbs+1)  // = 1/√(|c|^2+1)
-	return newState(cAbs*f, c*complex(f/cAbs, 0))
+	f := 1/math.Sqrt(1+cAbs*cAbs)  // = 1/√(1+|c|^2)
+	return &State{complex(f, 0), c*complex(f, 0)}
+}
+
+func RandomState() *State {
+	cosTheta := rand.Float64()*2-1
+	phi := rand.Float64()*2*math.Pi
+	return ByPolar(math.Acos(cosTheta), phi)
+}
+
+func RandomRealState() *State {
+	theta := rand.Float64()*2*math.Pi
+	return ByPolar(theta, 0)
 }

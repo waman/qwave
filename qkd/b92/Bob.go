@@ -28,7 +28,7 @@ func (bob *Bob) EstablishKey(ch qkd.ChannelOnBob){
 		matches := decode(qbts, bits)
 		ch.ToAlice() <- matches
 
-		bob.key, _ = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
+		bob.key = qkd.AppendMatchingBits(bob.key, bits, matches, bob.n)
 	}
 }
 
@@ -36,10 +36,10 @@ func decode(qbts []qubit.Qubit, bits []bool) []bool {
 	matches := make([]bool, len(qbts))
 	for i, qbt := range qbts {
 		if bits[i] {  // observe in the standard basis
-			matches[i] = qbt.Observe(basis.Standard) == ket.One
+			matches[i] = qbt.Observe(basis.Standard()) == ket.One()
 
 		} else {  // observe in the Hadamard basis
-			matches[i] = qbt.Observe(basis.Hadamard) == ket.Minus
+			matches[i] = qbt.Observe(basis.Hadamard()) == ket.Minus()
 		}
 	}
 	return matches

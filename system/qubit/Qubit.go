@@ -9,6 +9,8 @@ import (
 
 type Qubit interface{
 	Observe(basis *basis.Basis) *ket.State
+	ObserveInStandardBasis() *ket.State
+	ObserveInHadamardBasis() *ket.State
 }
 
 type defaultQubit struct {
@@ -33,8 +35,16 @@ func (qbt *defaultQubit) Observe(basis *basis.Basis) *ket.State {
 	return nextState
 }
 
-func New(a, b complex128) Qubit {
-  return NewWith(ket.New(a, b))
+func (qbt *defaultQubit) ObserveInStandardBasis() *ket.State {
+	return qbt.Observe(basis.Standard())
+}
+
+func (qbt *defaultQubit) ObserveInHadamardBasis() *ket.State {
+	return qbt.Observe(basis.Hadamard())
+}
+
+func New(a, b complex128, isNormalized bool) Qubit {
+  return NewWith(ket.New(a, b, isNormalized))
 }
 
 func NewWith(state *ket.State) Qubit {
@@ -42,9 +52,9 @@ func NewWith(state *ket.State) Qubit {
 	return &defaultQubit{mu, state}
 }
 
-func NewZero()   Qubit { return NewWith(ket.Zero) }
-func NewOne()    Qubit { return NewWith(ket.One) }
-func NewPlus()   Qubit { return NewWith(ket.Plus) }
-func NewMinus()  Qubit { return NewWith(ket.Minus) }
-func NewPlusI()  Qubit { return NewWith(ket.PlusI) }
-func NewMinusI() Qubit { return NewWith(ket.MinusI) }
+func NewZero()   Qubit { return NewWith(ket.Zero()) }
+func NewOne()    Qubit { return NewWith(ket.One()) }
+func NewPlus()   Qubit { return NewWith(ket.Plus()) }
+func NewMinus()  Qubit { return NewWith(ket.Minus()) }
+func NewPlusI()  Qubit { return NewWith(ket.PlusI()) }
+func NewMinusI() Qubit { return NewWith(ket.MinusI()) }

@@ -32,7 +32,7 @@ func (alice *LoggingAlice) EstablishKey(ch qkd.ChannelOnAlice){
 		ch.Qch() <- encode(bits)
 
 		matches := <- ch.FromBob()
-		newKey, m := qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
+		newKey, m := qkd.AppendMatchingBitsLogged(alice.key, bits, matches, alice.n)
 		alice.key = newKey
 		alice.Consumed += m
 	}
@@ -76,7 +76,7 @@ func ExampleSuccessRateOfEavesdropping(){
 
 			if aliceKey.Equals(bobKey) { matched++ }
 		}
-		log.Printf("%d: %.3f", nKey, float32(matched)/float32(nTry))
+		log.Printf("%d: %.3f", nKey, 1-float32(matched)/float32(nTry))
 	}
 	fmt.Println("Done.")
 	// Output:

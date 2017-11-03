@@ -24,7 +24,7 @@ func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 		ch.Qch() <- encode(bits)
 
 		matches := <- ch.FromBob()
-		alice.key, _ = qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
+		alice.key = qkd.AppendMatchingBits(alice.key, bits, matches, alice.n)
 	}
 }
 
