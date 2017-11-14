@@ -3,6 +3,11 @@ package qkd
 import (
 	"testing"
 	"fmt"
+	"image/color"
+	"math"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/vg"
 )
 
 func ExampleNewRandomBit() {

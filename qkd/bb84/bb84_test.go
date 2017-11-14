@@ -78,10 +78,10 @@ func ExampleBB84ProtocolWithEve(){
 	// false
 }
 
-func ExampleSuccessRateOfEavesdropping(){
+func ExampleSuccessRateOfEavesdropping() {
 	rand.Seed(time.Now().UnixNano())
 
-	const nTry = 10000
+	const nTry= 10000
 	nKeyMax := 20
 	data := make(plotter.XYs, nKeyMax)
 	for nKey := 1; nKey <= nKeyMax; nKey++ {
@@ -90,12 +90,14 @@ func ExampleSuccessRateOfEavesdropping(){
 			aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
 				NewAlice(nKey), NewBob(nKey), qkd.NewObservingEve())
 
-			if aliceKey.Equals(bobKey) { matched++ }
+			if aliceKey.Equals(bobKey) {
+				matched++
+			}
 		}
-		rate := 1-float64(matched)/float64(nTry)
+		rate := 1 - float64(matched)/float64(nTry)
 		log.Printf("%d: %.3f\n", nKey, rate)
 
-		i := nKey-1
+		i := nKey - 1
 		data[i].X = float64(nKey)
 		data[i].Y = rate
 	}
