@@ -3,7 +3,15 @@ package system
 import (
 	"bytes"
 	"fmt"
+	"math"
 )
+
+var s2i = complex(1/math.Sqrt(2), 0)
+
+// 1/√2 (sqrt 2 inverse)
+func S2I() complex128 {
+	return s2i
+}
 
 func ToString(cs ...complex128) string {
 	var buf bytes.Buffer

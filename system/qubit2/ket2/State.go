@@ -4,10 +4,8 @@ import (
 	"math"
 	"log"
 	"math/cmplx"
-	"github.com/waman/qwave/system"
+	. "github.com/waman/qwave/system"
 )
-
-var s2i = complex(1/math.Sqrt(2), 0)
 
 var (
 	zero  = &State{1, 0, 0, 0} // = |00>
@@ -15,10 +13,10 @@ var (
 	two   = &State{0, 0, 1, 0} // = |10>
 	three = &State{0, 0, 0, 1} // = |11>
 
-	phiPlus  = &State{s2i, 0, 0,  s2i}  // = (|00> + |11>)/√2
-	phiMinus = &State{s2i, 0, 0, -s2i}  // = (|00> - |11>)/√2
-	psiPlus  = &State{0, s2i,  s2i, 0}  // = (|01> + |10>)/√2
-	psiMinus = &State{0, s2i, -s2i, 0}  // = (|01> - |10>)/√2
+	phiPlus  = &State{S2I(), 0, 0,  S2I()}  // = (|00> + |11>)/√2
+	phiMinus = &State{S2I(), 0, 0, -S2I()}  // = (|00> - |11>)/√2
+	psiPlus  = &State{0, S2I(),  S2I(), 0}  // = (|01> + |10>)/√2
+	psiMinus = &State{0, S2I(), -S2I(), 0}  // = (|01> - |10>)/√2
 )
 
 func Zero()  *State { return zero }
@@ -151,5 +149,5 @@ func (s *State) String() string {
 		}
 	}
 
-	return system.ToString(s.Coefficients())
+	return ToString(s.Coefficients())
 }
