@@ -43,3 +43,13 @@ func (basis *Basis) States() [2]*ket.State {
 func (basis *Basis) String() string {
 	return fmt.Sprintf("{%v, %v}", basis.first, basis.second)
 }
+
+func NewRandomBasis() *Basis {
+	s := ket.NewRandomState()
+	return &Basis{s, s.Vertical()}
+}
+
+func NewRandomRealBasis() *Basis {
+	s := ket.NewRandomRealState()
+	return &Basis{s, s.Vertical()}
+}

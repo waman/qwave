@@ -7,7 +7,7 @@ import (
 )
 
 func ExampleEkert91Protocol(){
-	n := 50
+	n := 10000
 	aliceKey, bobKey := qkd.EstablishKeys(NewAlice(n), NewBob(n))
 
 	log.Printf("Alice's key: %s", aliceKey)
@@ -19,14 +19,13 @@ func ExampleEkert91Protocol(){
 	// 1
 }
 
-
-func ExampleBB84ProtocolWithEve(){
-	n := 50
+func ExampleEkert91ProtocolWithEve(){
+	n := 100000
 	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(n), NewBob(n), qkd.NewObservingEve())
 
-	log.Printf("Alice's key: %s", aliceKey)
-	log.Printf("Bob's key  : %s", bobKey)
+	//log.Printf("Alice's key: %s", aliceKey)
+	//log.Printf("Bob's key  : %s", bobKey)
 	log.Printf("Concordance rate: %f", aliceKey.ConcordanceRate(bobKey))
 	fmt.Println(aliceKey.Equals(bobKey))
 	// Output:

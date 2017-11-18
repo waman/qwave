@@ -8,9 +8,11 @@ import (
 )
 
 type Qubit interface{
-	Observe(basis *basis.Basis) *ket.State
+	Observe(b *basis.Basis) *ket.State
 	ObserveInStandardBasis() *ket.State
 	ObserveInHadamardBasis() *ket.State
+
+	Apply(u Matrix2)
 }
 
 type defaultQubit struct {
@@ -18,17 +20,17 @@ type defaultQubit struct {
 	state *ket.State
 }
 
-func (qbt *defaultQubit) Observe(basis *basis.Basis) *ket.State {
+func (qbt *defaultQubit) Observe(b *basis.Basis) *ket.State {
 	qbt.mu.Lock()
 	defer qbt.mu.Unlock()
 
-  prob := qbt.state.Probability(basis.First())
+  p := qbt.state.Probability(b.First())
 
   var nextState *ket.State
-  if p := rand.Float64(); p < prob {
-  	nextState = basis.First()
+  if r := rand.Float64(); r < p {
+  	nextState = b.First()
 	}else{
-		nextState = basis.Second()
+		nextState = b.Second()
 	}
 
 	qbt.state = nextState
@@ -43,6 +45,11 @@ func (qbt *defaultQubit) ObserveInHadamardBasis() *ket.State {
 	return qbt.Observe(basis.Hadamard())
 }
 
+func (qbt *defaultQubit) Apply(u Matrix2){
+	qbt.state = u.ApplyToState(qbt.state)
+}
+
+// New function return the new Qubit object.
 func New(a, b complex128, isNormalized bool) Qubit {
   return NewWith(ket.New(a, b, isNormalized))
 }

@@ -56,9 +56,9 @@ func encode(bits, bases []bool) []qubit.Qubit {
 }
 
 func matchBases(bases, bobsBases []bool) []bool {
-	var match = make([]bool, len(bases))
+	matches := make([]bool, len(bases))
 	for i, basis := range bases {
-		match[i] = basis == bobsBases[i]
+		matches[i] = basis == bobsBases[i]
 	}
-	return match
+	return matches
 }

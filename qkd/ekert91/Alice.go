@@ -3,8 +3,9 @@ package ekert91
 import (
 	"github.com/waman/qwave/system/qubit"
 	"github.com/waman/qwave/qkd"
-	"github.com/waman/qwave/system/qubit2"
 	"github.com/waman/qwave/system/qubit/ket"
+	"github.com/waman/qwave/system/nqubits"
+	"github.com/waman/qwave/system/qubit2"
 )
 
 func NewAlice(n int) *Alice {
@@ -23,7 +24,7 @@ func (alice *Alice) Key() qkd.Key {
 func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
     q2s := createEntangledQubits(qkd.ProperBitCount)
-    firsts, seconds := separateQubits(q2s)
+    firsts, seconds := qubit2.SplitQubits(q2s)
 		ch.Qch() <- seconds
 
 		bases := qkd.NewRandomBits(qkd.ProperBitCount)
@@ -35,27 +36,18 @@ func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	}
 }
 
-func createEntangledQubits(n int) []*qubit2.Qubit2 {
-	q2s := make([]*qubit2.Qubit2, qkd.ProperBitCount)
-	for i, n := 0, len(q2s); i < n; i++ {
+func createEntangledQubits(n int) []nqubits.NQubits {
+	q2s := make([]nqubits.NQubits, n)
+	for i := 0; i < n; i++ {
 		q2s[i] = qubit2.NewPhiPlus()
 	}
 	return q2s
 }
 
-func separateQubits(q2s []*qubit2.Qubit2) (firsts, seconds []qubit.Qubit) {
-	firsts = make([]qubit.Qubit, len(q2s))
-	seconds = make([]qubit.Qubit, len(q2s))
-	for i, q2 := range q2s {
-		firsts[i] = q2.Qubit(0)
-		seconds[i] = q2.Qubit(1)
-	}
-	return
-}
-
 func observeQubits(qbts []qubit.Qubit, bases []bool) []bool {
-	bits := make([]bool, len(qbts))
-	for i, n := 0, len(qbts); i < n; i++ {
+	n := len(qbts)
+	bits := make([]bool, n)
+	for i := 0; i < n; i++ {
 		if bases[i] {
 			bits[i] = qbts[i].ObserveInHadamardBasis() == ket.Minus()
 		} else {
@@ -66,9 +58,9 @@ func observeQubits(qbts []qubit.Qubit, bases []bool) []bool {
 }
 
 func matchBases(bases, bobsBases []bool) []bool {
-	var match = make([]bool, len(bases))
+	matches := make([]bool, len(bases))
 	for i, basis := range bases {
-		match[i] = basis == bobsBases[i]
+		matches[i] = basis == bobsBases[i]
 	}
-	return match
+	return matches
 }

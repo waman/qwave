@@ -3,6 +3,7 @@ package nket
 import (
 	"log"
 	"math/cmplx"
+	"github.com/waman/qwave/system"
 )
 
 type MetricVector interface{
@@ -47,8 +48,9 @@ func (s *BaseMetricVector) Get(i int) complex128 {
 	}
 }
 
-func (s *BaseMetricVector) Prod(y MetricVector) complex128 {
-	return y.Get(s.i)
+func (x *BaseMetricVector) Prod(y MetricVector) complex128 {
+	checkMatchingQubitCount(x, y)
+	return y.Get(x.i)
 }
 
 //***** DenseMetricVector (slice-base implementation) *****
@@ -61,19 +63,11 @@ func (s *DenseMetricVector) Dim() int {
 }
 
 func (s *DenseMetricVector) Coefficients() []complex128 {
-	cs := make([]complex128, len(s.cs))
-	copy(cs, s.cs)
-	return cs
+	return system.CreateCopy(s.cs)
 }
 
 func (s *DenseMetricVector) CoefficientMap() map[int]complex128 {
-	cMap := make(map[int]complex128)
-	for i, c := range s.cs {
-		if c != 0 {
-			cMap[i] = c
-		}
-	}
-	return cMap
+	return system.SliceToMap(s.cs)
 }
 
 func (s *DenseMetricVector) Get(i int) complex128 {
@@ -81,12 +75,9 @@ func (s *DenseMetricVector) Get(i int) complex128 {
 }
 
 // <x|y>
-func (s *DenseMetricVector) Prod(y MetricVector) complex128 {
-	result := 0i
-	for i, c := range s.cs {
-		result += cmplx.Conj(c)*y.Get(i)
-	}
-	return result
+func (x *DenseMetricVector) Prod(y MetricVector) complex128 {
+	checkMatchingQubitCount(x, y)
+	return InnerProduct(x.cs, y)
 }
 
 //***** SparseMetricVector (uni-component MetricVector) *****
@@ -108,11 +99,7 @@ func (s *SparseMetricVector) Coefficients() []complex128 {
 }
 
 func (s *SparseMetricVector) CoefficientMap() map[int]complex128 {
-	cMap := make(map[int]complex128)
-	for i, c := range s.cMap {
-		cMap[i] = c
-	}
-	return cMap
+	return system.CreateCopyMap(s.cMap)
 }
 
 func (s *SparseMetricVector) Get(i int) complex128 {
@@ -124,10 +111,17 @@ func (s *SparseMetricVector) Get(i int) complex128 {
 	}
 }
 
-func (s *SparseMetricVector) Prod(y MetricVector) complex128 {
+func (x *SparseMetricVector) Prod(y MetricVector) complex128 {
+	checkMatchingQubitCount(x, y)
 	result := 0i
-	for i, c := range s.cMap {
+	for i, c := range x.cMap {
 		result += cmplx.Conj(c)*y.Get(i)
 	}
 	return result
+}
+
+func checkMatchingQubitCount(x, y MetricVector){
+	if x.Dim() != y.Dim() {
+		log.Panicf("Two MetricVectors have different dimensions: %d, %d", x.Dim(), y.Dim())
+	}
 }

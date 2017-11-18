@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math"
 	"math/cmplx"
+	"github.com/waman/qwave/system"
 )
 
 const delta = 1e-10
+var s2i = system.S2I()
 
 func TestEqualState(t *testing.T){
 	var tests = []struct {
@@ -118,7 +120,7 @@ func TestByPolarFunction(t *testing.T){
 }
 
 func TestComplexMethod(t *testing.T){
-	if !cmplx.IsInf(zero.Complex()) {
+	if !cmplx.IsInf(one.Complex()) {
 		t.Errorf("(|0>).Complex() is not cmplx.Inf()")
 	}
 
@@ -126,13 +128,14 @@ func TestComplexMethod(t *testing.T){
 		state *State
 		want complex128
 	}{
-		{one, 0},
-		{plus, complex(1, 0)},
-		{minus, complex(-1, 0)},
+		{zero, 0},
+		{plus, 1},
+		{minus, -1},
 		{plusI, 1i},
 		{minusI, -1i},
 		{ByPolar(math.Pi/2, math.Pi/4), s2i + s2i*1i},
-		{ByPolar(math.Pi/3, math.Pi*3/4), complex(-math.Sqrt(6)/2, math.Sqrt(6)/2)},
+		{New(3, 4, false), 4.0/3.0},
+		{New(5, 12i, false), 2.4i},
 	}
 	for i, test := range tests {
 		if got := test.state.Complex(); !EqC10(got, test.want) {
@@ -146,14 +149,15 @@ func TestByComplexFunction(t *testing.T){
 		c complex128
 		want *State
 	}{
-		{cmplx.Inf(), zero},
-		{0, one},
-		{complex(1, 0), plus},
-		{complex(-1, 0), minus},
+		{0, zero},
+		{cmplx.Inf(), one},
+		{1, plus},
+		{-1, minus},
 		{1i, plusI},
 		{-1i, minusI},
 		{s2i + s2i*1i, ByPolar(math.Pi/2, math.Pi/4)},
-		{complex(-math.Sqrt(6)/2, math.Sqrt(6)/2), ByPolar(math.Pi/3, math.Pi*3/4)},
+		{3.0/4.0, New(4, 3, false)},
+		{5.0i/12.0, New(12, 5i, true)},
 	}
 	for i, test := range tests {
 		if got := ByComplex(test.c); !got.EqualState(test.want, 1e-10) {

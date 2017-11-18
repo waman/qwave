@@ -5,19 +5,16 @@ import (
 	"math"
 	"log"
 	"math/rand"
-	"github.com/waman/qwave/system"
+	. "github.com/waman/qwave/system"
 )
-
-// 1/√2 (sqrt 2 inverse)
-var s2i = complex(1/math.Sqrt(2), 0)
 
 var (
 	zero   = &State{1, 0}
 	one    = &State{0, 1}
-	plus   = &State{s2i, s2i}
-	minus  = &State{s2i, -s2i}
-	plusI  = &State{s2i, s2i*1i}
-	minusI = &State{s2i, -s2i*1i}
+	plus   = &State{S2I(), S2I()}
+	minus  = &State{S2I(), -S2I()}
+	plusI  = &State{S2I(), S2I()*1i}
+	minusI = &State{S2I(), -S2I()*1i}
 )
 
 func Zero()   *State { return zero }
@@ -108,7 +105,11 @@ func (s *State) String() string {
 		}
 	}
 
-	return system.ToString(s.Coefficients())
+	return ToString(s.Coefficients())
+}
+
+func (x *State) Vertical() *State {
+	return New(cmplx.Conj(x.b), -cmplx.Conj(x.a), true)
 }
 
 // Polar method returns the polar coordinates on the Bloch sphere.
@@ -154,8 +155,8 @@ func ByPolar(theta, phi float64) *State {
 }
 
 // a|0> + b|1> -> b/a
-// |0> -> cmplx.Inf()
-// |1> -> 0
+// |0> -> 0
+// |1> -> cmplx.Inf()
 func (s *State) Complex() complex128 {
   return s.b/s.a
 }
@@ -163,9 +164,9 @@ func (s *State) Complex() complex128 {
 // c -> 1/√(1+|c|^2)|0> + (c/√(1+|c|^2))|1>
 func ByComplex(c complex128) *State {
   if cmplx.IsInf(c) {
-  	return Zero()
+  	return One()
 	} else if c == 0 {
-		return One()
+		return Zero()
 	}
 
 	cAbs := cmplx.Abs(c)
@@ -173,13 +174,13 @@ func ByComplex(c complex128) *State {
 	return &State{complex(f, 0), c*complex(f, 0)}
 }
 
-func RandomState() *State {
+func NewRandomState() *State {
 	cosTheta := rand.Float64()*2-1
 	phi := rand.Float64()*2*math.Pi
 	return ByPolar(math.Acos(cosTheta), phi)
 }
 
-func RandomRealState() *State {
-	theta := rand.Float64()*2*math.Pi
+func NewRandomRealState() *State {
+	theta := rand.Float64()*math.Pi
 	return ByPolar(theta, 0)
 }
