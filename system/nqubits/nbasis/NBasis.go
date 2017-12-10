@@ -4,63 +4,105 @@ import (
 	"github.com/waman/qwave/system/nqubits/nket"
 	"github.com/waman/qwave/system"
 	"log"
+	"bytes"
 )
 
 type NBasis interface {
+	QubitCount() int
 	Dim() int
 	States() []nket.NState
-	Get(i int) nket.NState
+	At(i int) nket.NState
+
+	String() string
+}
+
+func toString(b NBasis) string {
+	var buf bytes.Buffer
+	buf.WriteString("{")
+	sep := ""
+	for _, s := range b.States() {
+		buf.WriteString(sep)
+		buf.WriteString(s.String())
+		sep = ", "
+	}
+	buf.WriteString("}")
+	return buf.String()
 }
 
 //***** Standard basis *****
 func Standard(qbtCount int) NBasis {
-	return &nStandard{system.Dim(qbtCount)}
+	return &nStandard{qbtCount}
 }
 
 type nStandard struct {
-	n int // number of base vectors, dimension of state vector (2^qubitCount)
+	qubitCount int
+}
+
+func (b *nStandard) QubitCount() int {
+	return b.qubitCount
 }
 
 func (b *nStandard) Dim() int {
-	return b.n
+	return system.Dim(b.qubitCount)
 }
 
 func (b *nStandard) States() []nket.NState {
-	ss := make([]nket.NState, b.n)
-	for i := 0; i < b.n; i++ {
-		ss[i] = nket.NewBase(b.n, i)
+	n := b.Dim()
+	ss := make([]nket.NState, n)
+	for i := 0; i < n; i++ {
+		ss[i] = nket.NewBase(n, i)
 	}
 	return ss
 }
 
-func (b *nStandard) Get(i int) nket.NState {
-	return nket.NewBase(b.n, i)
+func (b *nStandard) At(i int) nket.NState {
+	return nket.NewBase(b.qubitCount, i)
+}
+
+func (b *nStandard) String() string {
+	return toString(b)
 }
 
 //***** default implementation of basis *****
+// This method does not check orthogonality between nket.NStates.
 func New(qbtCount int, states ...nket.NState) NBasis {
-	if len(states) != system.Dim(qbtCount) {
-		log.Panicf("%d NState objects must be passed as arguments: only %d passed",
-			system.Dim(qbtCount), len(states))
+	if n := system.Dim(qbtCount); len(states) != n {
+		log.Panicf("%d NState objects must be passed as arguments: only %d passed", n, len(states))
 	}
-	return &defaultNBasis{system.Dim(qbtCount), states}
+
+	for i, state := range states {
+		if state.QubitCount() != qbtCount {
+			log.Panicf("%d-th NState has %d qubits, but this must be %d",
+				i, state.QubitCount(), qbtCount)
+		}
+	}
+
+	return &defaultNBasis{qbtCount, states}
 }
 
 type defaultNBasis struct {
-	n int // number of base vectors, dimension of state vector (2^qubitCount)
+	qubitCount int
 	states []nket.NState
 }
 
+func (b *defaultNBasis) QubitCount() int {
+	return b.qubitCount
+}
+
 func (b *defaultNBasis) Dim() int {
-	return b.n
+	return system.Dim(b.qubitCount)
 }
 
 func (b *defaultNBasis) States() []nket.NState {
-	states := make([]nket.NState, b.n)
+	states := make([]nket.NState, b.Dim())
 	copy(states, b.states)
 	return states
 }
 
-func (b *defaultNBasis) Get(i int) nket.NState {
+func (b *defaultNBasis) At(i int) nket.NState {
 	return b.states[i]
+}
+
+func (b *defaultNBasis) String() string {
+	return toString(b)
 }

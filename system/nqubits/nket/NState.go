@@ -13,6 +13,8 @@ type NState interface {
   Probability(y NState) float64
   EqualState(y NState, delta float64) bool
   IsOrthogonalTo(y NState, delta float64) bool
+
+  String() string
 }
 
 func New(qbtCount int, isNormalized bool, cs ...complex128) NState{
@@ -40,36 +42,16 @@ func NewWith(qbtCount int, v MetricVector) NState {
 
 type defaultNState struct {
 	qubitCount int
-	v MetricVector
+	MetricVector
 }
 
 func (x *defaultNState) QubitCount() int {
 	return x.qubitCount
 }
 
-func (x *defaultNState) Dim() int {
-	return x.v.Dim()
-}
-
-func (x *defaultNState) Coefficients() []complex128 {
-	return x.v.Coefficients()
-}
-
-func (x *defaultNState) CoefficientMap() map[int]complex128 {
-	return x.v.CoefficientMap()
-}
-
-func (x *defaultNState) Get(i int) complex128 {
-	return x.v.Get(i)
-}
-
-func (x *defaultNState) Prod(y MetricVector) complex128 {
-	return x.v.Prod(y)
-}
-
 // |<x|y>|
 func (x *defaultNState) Amplitude(w NState) float64 {
-	return cmplx.Abs(x.Prod(w))
+	return cmplx.Abs(x.InnerProduct(w))
 }
 
 // |<x|y>|^2
@@ -89,5 +71,5 @@ func (x *defaultNState) IsOrthogonalTo(y NState, delta float64) bool {
 }
 
 func (x *defaultNState) String() string {
-	return system.ToString(x.v.Coefficients()...)
+	return system.ToString(x.Coefficients()...)
 }

@@ -3,7 +3,6 @@ package b92
 import (
 	"github.com/waman/qwave/qkd"
 	"fmt"
-	"log"
 	"time"
 	"math/rand"
 	"image/color"
@@ -19,8 +18,8 @@ func ExampleB92Protocol(){
 	n := 50
 	aliceKey, bobKey := qkd.EstablishKeys(NewAlice(n), NewBob(n))
 
-	log.Printf("Alice's key: %s", aliceKey)
-	log.Printf("Bob's key  : %s", bobKey)
+	// fmt.Printf("Alice's key: %s...\n", aliceKey[:20])
+	// fmt.Printf("Bob's key  : %s...\n", bobKey[:20])
 	fmt.Println(aliceKey.Equals(bobKey))
 	fmt.Println(aliceKey.ConcordanceRate(bobKey))
 	// Output:
@@ -28,12 +27,12 @@ func ExampleB92Protocol(){
 	// 1
 }
 
-type LoggingAlice struct {
+type fmtgingAlice struct {
 	Alice
 	Consumed int
 }
 
-func (alice *LoggingAlice) EstablishKey(ch qkd.ChannelOnAlice){
+func (alice *fmtgingAlice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
 		bits  := qkd.NewRandomBits(qkd.ProperBitCount)
 		ch.Qch() <- encode(bits)
@@ -49,13 +48,14 @@ func ExampleB92ProtocolWithLoggingAlice(){
 	rand.Seed(time.Now().UnixNano())
 
 	n := 100000
-	alice := &LoggingAlice{*NewAlice(n), 0}
+	alice := &fmtgingAlice{*NewAlice(n), 0}
 	aliceKey, bobKey := qkd.EstablishKeys(alice, NewBob(n))
 
-	log.Printf("Accepted Bit Rate: %f", float32(n)/float32(alice.Consumed))
+	fmt.Printf("Accepted Bit Rate: %.2f\n", float32(n)/float32(alice.Consumed))
 	fmt.Println(aliceKey.Equals(bobKey))
 	fmt.Println(aliceKey.ConcordanceRate(bobKey))
 	// Output:
+	// Accepted Bit Rate: 0.25
 	// true
 	// 1
 }
@@ -67,11 +67,12 @@ func ExampleB92ProtocolWithEve(){
 	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(n), NewBob(n), qkd.NewObservingEve())
 
-	//log.Printf("Alice's key: %s", aliceKey)
-	//log.Printf("Bob's key  : %s", bobKey)
-	log.Printf("Concordance rate: %f", aliceKey.ConcordanceRate(bobKey))
+	//fmt.Printf("Alice's key: %s...\n", aliceKey[:20])
+	//fmt.Printf("Bob's key  : %s...\n", bobKey[:20])
+	fmt.Printf("Concordance rate: %.2f\n", aliceKey.ConcordanceRate(bobKey))
 	fmt.Println(aliceKey.Equals(bobKey))
 	// Output:
+	// Concordance rate: 0.67
 	// false
 }
 
@@ -90,7 +91,7 @@ func ExampleSuccessRateOfEavesdropping(){
 			if aliceKey.Equals(bobKey) { matched++ }
 		}
 		rate := 1-float64(matched)/float64(nTry)
-		log.Printf("%d: %.3f\n", nKey, rate)
+		// fmt.Printf("%d: %.3f\n", nKey, rate)
 
 		i := nKey-1
 		data[i].X = float64(nKey)
@@ -123,34 +124,51 @@ func plotData(file string, data plotter.XYs){
 
 	p.Add(f, s)
 	p.Legend.Add("Simulation", s)
-	p.Legend.Add("Theoretical", f)
+	p.Legend.Add("Theory", f)
 
 	if err := p.Save(4*vg.Inch, 4*vg.Inch, file); err != nil {
 		panic(err)
 	}
 }
 
-func ExampleConcordanceRateBetweenAliceAndEveR(){
+func ExampleConcordanceRateBetweenAliceAndEve(){
 	rand.Seed(time.Now().UnixNano())
 
-	nKey := 100000
+	nKey := 1000000
 
 	aliceKey, bobKey, eveKey := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(nKey), NewBob(nKey), NewEve(nKey))
 
-	log.Printf("Concordance Rate between Alice and Bob: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Bob: %.2f\n",
 		aliceKey.ConcordanceRate(bobKey))
-	log.Printf("Concordance Rate between Alice and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Eve: %.2f\n",
 		aliceKey.ConcordanceRate(eveKey))
-	log.Printf("Concordance Rate between Bob and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Bob and Eve: %.2f\n",
 		bobKey.ConcordanceRate(eveKey))
-
-	fmt.Println("Done.")
 	// Output:
-	// Done.
+	// Concordance Rate between Alice and Bob: 0.67
+  // Concordance Rate between Alice and Eve: 0.83
+  // Concordance Rate between Bob and Eve: 0.83
 }
 
-func ExampleConcordanceRateBetweenAliceAndEveWhenEavesdroppingSucceedR(){
+func ExampleConcordanceRateBetweenAliceAndBobWithEavesdropping(){
+	rand.Seed(time.Now().UnixNano())
+
+	nKey := 100000
+	alice := &fmtgingAlice{*NewAlice(nKey), 0}
+	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
+		alice, NewBob(nKey), qkd.NewObservingEve())
+
+	fmt.Printf("Concordance Rate between Alice and Bob: %.2f\n",
+		aliceKey.ConcordanceRate(bobKey))
+	
+	fmt.Printf("Consumed qubits: %.2f\n", float32(nKey)/float32(alice.Consumed))
+	// Output:
+  // Concordance Rate between Alice and Bob: 0.67
+  // Consumed qubits: 0.38
+}
+
+func ExampleConcordanceRateBetweenAliceAndEveWhenEavesdroppingSucceed(){
 	rand.Seed(time.Now().UnixNano())
 
 	nTry := 100000
@@ -166,10 +184,8 @@ func ExampleConcordanceRateBetweenAliceAndEveWhenEavesdroppingSucceedR(){
 		}
 	}
 
-	log.Printf("Concordance Rate between Alice and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Eve: %.2f\n",
 		float32(conc)/float32(n*nKey))
-
-	fmt.Println("Done.")
 	// Output:
-	// Done.
+  // Concordance Rate between Alice and Eve: 1.00
 }

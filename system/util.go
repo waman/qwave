@@ -7,6 +7,10 @@ import (
 	"math/cmplx"
 )
 
+type ComplexContainer interface {
+	At(i int) complex128
+}
+
 var s2i = complex(1/math.Sqrt(2), 0)
 
 // 1/√2 (sqrt 2 inverse)
@@ -19,27 +23,38 @@ func Dim(qbtCount int) int {
 }
 
 func SliceToMap(cs []complex128) map[int]complex128 {
-	cMap := make(map[int]complex128)
-	for i, c := range cs {
-		if c != 0 {
-			cMap[i] = c
+	var cMap map[int]complex128
+	for i, c_i := range cs {
+		if c_i != 0 {
+			if cMap == nil {
+				cMap = make(map[int]complex128)
+			}
+			cMap[i] = c_i
 		}
 	}
 	return cMap
 }
 
+func MapToSlice(n int, cMap map[int]complex128) []complex128 {
+	cs := make([]complex128, n)
+	for i, c_i := range cMap {
+		cs[i] = c_i
+	}
+	return cs
+}
+
 func CreateCopy(cs []complex128) []complex128 {
-	cs_ := make([]complex128, len(cs))
-	copy(cs_, cs)
-	return cs_
+	_cs := make([]complex128, len(cs))
+	copy(_cs, cs)
+	return _cs
 }
 
 func CreateCopyMap(cMap map[int]complex128) map[int]complex128 {
-	cMap_ := make(map[int]complex128)
-	for i, c := range cMap {
-		cMap_[i] = c
+	_cMap := make(map[int]complex128)
+	for i, c_i := range cMap {
+		_cMap[i] = c_i
 	}
-	return cMap_
+	return _cMap
 }
 
 func Normalize(cs []complex128){
@@ -75,6 +90,28 @@ func Norm2Map(cMap map[int]complex128) float64 {
 }
 
 func ToString(cs ...complex128) string {
+	if len(cs) == 2 {
+		a, b := cs[0], cs[1]
+		if b == 0 { return "|0>"}
+		if a == 0 { return "|1>"}
+		if b ==  a { return "|+>"}
+		if b == -a { return "|->"}
+		if b ==  a*1i { return "|+i>"}
+		if b == -a*1i { return "|-i>"}
+
+	} else if len(cs) == 4 {
+		a, b, c, d := cs[0], cs[1], cs[2], cs[3]
+		if b == 0 && c == 0 && d == 0 { return "|00>"}
+		if a == 0 && c == 0 && d == 0 { return "|01>"}
+		if a == 0 && b == 0 && d == 0 { return "|10>"}
+		if a == 0 && b == 0 && c == 0 { return "|11>"}
+
+		if b == 0 && c == 0 && a ==  d { return "|Φ+>"}
+		if b == 0 && c == 0 && a == -d { return "|Φ->"}
+		if a == 0 && d == 0 && b ==  c { return "|Ψ+>"}
+		if a == 0 && d == 0 && b == -c { return "|Ψ->"}
+	}
+
 	var buf bytes.Buffer
 
 	n := len(cs)

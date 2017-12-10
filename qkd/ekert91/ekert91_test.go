@@ -2,7 +2,6 @@ package ekert91
 
 import (
 	"github.com/waman/qwave/qkd"
-	"log"
 	"fmt"
 )
 
@@ -10,8 +9,8 @@ func ExampleEkert91Protocol(){
 	n := 10000
 	aliceKey, bobKey := qkd.EstablishKeys(NewAlice(n), NewBob(n))
 
-	log.Printf("Alice's key: %s", aliceKey)
-	log.Printf("Bob's key  : %s", bobKey)
+	// fmt.Printf("Alice's key: %s...\n", aliceKey[:20])
+	// fmt.Printf("Bob's key  : %s...\n", bobKey[:20])
 	fmt.Println(aliceKey.Equals(bobKey))
 	fmt.Println(aliceKey.ConcordanceRate(bobKey))
 	// Output:
@@ -24,10 +23,11 @@ func ExampleEkert91ProtocolWithEve(){
 	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(n), NewBob(n), qkd.NewObservingEve())
 
-	//log.Printf("Alice's key: %s", aliceKey)
-	//log.Printf("Bob's key  : %s", bobKey)
-	log.Printf("Concordance rate: %f", aliceKey.ConcordanceRate(bobKey))
+	// fmt.Printf("Alice's key: %s...\n", aliceKey[:20])
+	// fmt.Printf("Bob's key  : %s...\n", bobKey[:20])
+	fmt.Printf("Concordance rate: %.2f\n", aliceKey.ConcordanceRate(bobKey))
 	fmt.Println(aliceKey.Equals(bobKey))
 	// Output:
+	// Concordance rate: 0.75
 	// false
 }

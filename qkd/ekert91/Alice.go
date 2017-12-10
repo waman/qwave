@@ -4,8 +4,7 @@ import (
 	"github.com/waman/qwave/system/qubit"
 	"github.com/waman/qwave/qkd"
 	"github.com/waman/qwave/system/qubit/ket"
-	"github.com/waman/qwave/system/nqubits"
-	"github.com/waman/qwave/system/qubit2"
+	"github.com/waman/qwave/system/qubits2"
 )
 
 func NewAlice(n int) *Alice {
@@ -23,8 +22,7 @@ func (alice *Alice) Key() qkd.Key {
 
 func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	for len(alice.key) < alice.n {
-    q2s := createEntangledQubits(qkd.ProperBitCount)
-    firsts, seconds := qubit2.SplitQubits(q2s)
+    firsts, seconds := createEntangledQubits(qkd.ProperBitCount)
 		ch.Qch() <- seconds
 
 		bases := qkd.NewRandomBits(qkd.ProperBitCount)
@@ -36,12 +34,13 @@ func (alice *Alice) EstablishKey(ch qkd.ChannelOnAlice){
 	}
 }
 
-func createEntangledQubits(n int) []nqubits.NQubits {
-	q2s := make([]nqubits.NQubits, n)
+func createEntangledQubits(n int) (firsts, seconds []qubit.Qubit) {
+	firsts = make([]qubit.Qubit, n)
+	seconds = make([]qubit.Qubit, n)
 	for i := 0; i < n; i++ {
-		q2s[i] = qubit2.NewPhiPlus()
+		firsts[i], seconds[i] = qubits2.NewPhiPlus().Split()
 	}
-	return q2s
+	return
 }
 
 func observeQubits(qbts []qubit.Qubit, bases []bool) []bool {

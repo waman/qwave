@@ -5,18 +5,19 @@ import (
 	"github.com/waman/qwave/system/qubit/ket"
 	"github.com/waman/qwave/system/qubit/basis"
 	"sync"
+	"github.com/waman/qwave/system/qubit/op"
 )
 
 type Qubit interface{
-	Observe(b *basis.Basis) *ket.State
+	Observe(b *basis.Basis)  *ket.State
 	ObserveInStandardBasis() *ket.State
 	ObserveInHadamardBasis() *ket.State
 
-	Apply(u Matrix2)
+	Apply(u op.Matrix2x2)
 }
 
 type defaultQubit struct {
-	mu    sync.Mutex
+	mu    *sync.Mutex
 	state *ket.State
 }
 
@@ -26,15 +27,15 @@ func (qbt *defaultQubit) Observe(b *basis.Basis) *ket.State {
 
   p := qbt.state.Probability(b.First())
 
-  var nextState *ket.State
+  var newState *ket.State
   if r := rand.Float64(); r < p {
-  	nextState = b.First()
+  	newState = b.First()
 	}else{
-		nextState = b.Second()
+		newState = b.Second()
 	}
 
-	qbt.state = nextState
-	return nextState
+	qbt.state = newState
+	return newState
 }
 
 func (qbt *defaultQubit) ObserveInStandardBasis() *ket.State {
@@ -45,8 +46,9 @@ func (qbt *defaultQubit) ObserveInHadamardBasis() *ket.State {
 	return qbt.Observe(basis.Hadamard())
 }
 
-func (qbt *defaultQubit) Apply(u Matrix2){
-	qbt.state = u.ApplyToState(qbt.state)
+func (qbt *defaultQubit) Apply(u op.Matrix2x2){
+	newA, newB := u.Apply(qbt.state.Coefficients())
+	qbt.state = ket.New(newA, newB, true)  // TODO
 }
 
 // New function return the new Qubit object.
@@ -56,7 +58,7 @@ func New(a, b complex128, isNormalized bool) Qubit {
 
 func NewWith(state *ket.State) Qubit {
 	var mu sync.Mutex
-	return &defaultQubit{mu, state}
+	return &defaultQubit{&mu, state}
 }
 
 func NewZero()   Qubit { return NewWith(ket.Zero()) }
@@ -65,3 +67,11 @@ func NewPlus()   Qubit { return NewWith(ket.Plus()) }
 func NewMinus()  Qubit { return NewWith(ket.Minus()) }
 func NewPlusI()  Qubit { return NewWith(ket.PlusI()) }
 func NewMinusI() Qubit { return NewWith(ket.MinusI()) }
+
+func U(m op.Matrix2x2, ms ...op.Matrix2x2) func(qbt Qubit) Qubit {
+	mtrx := op.Prod(m, ms...)
+	return func(qbt Qubit) Qubit {
+		qbt.Apply(mtrx)
+		return qbt
+	}
+}

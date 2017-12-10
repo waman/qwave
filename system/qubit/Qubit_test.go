@@ -3,6 +3,8 @@ package qubit
 import (
 	"testing"
 	"github.com/waman/qwave/system/qubit/basis"
+	"github.com/waman/qwave/system/qubit/ket"
+	"github.com/waman/qwave/system/qubit/op"
 )
 
 func TestEquality(t *testing.T){
@@ -47,3 +49,14 @@ func TestObserveInTheSameBasis(t *testing.T){
 //	// Output:
 //	// map[|0>:5000 |1>:5000]
 //}
+
+
+func TestU(t *testing.T){
+	qbt := NewZero()
+	X := op.PauliX()
+	U(X, X, X)(qbt)
+
+	if qbt.ObserveInStandardBasis() != ket.One() {
+		t.Errorf("U()")
+	}
+}

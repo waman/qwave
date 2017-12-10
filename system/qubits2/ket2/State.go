@@ -17,6 +17,10 @@ var (
 	psiMinus = nket.New(2, true, 0, S2I(), -S2I(), 0)  // = (|01> - |10>)/√2
 )
 
+func New(a, b, c, d complex128, isNormalized bool) nket.NState {
+	return nket.New(2, isNormalized, a, b, c, d)
+}
+
 func Zero()  nket.NState { return zero }
 func One()   nket.NState { return one }
 func Two()   nket.NState { return two }

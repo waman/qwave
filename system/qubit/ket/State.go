@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	. "github.com/waman/qwave/system"
+	"github.com/waman/qwave/system/qubit/op"
 )
 
 var (
@@ -32,8 +33,19 @@ type State struct {
 func (x *State) Coefficients() (complex128, complex128) {
 	return x.a, x.b
 }
+
 func (x *State) A() complex128 { return x.a }
 func (x *State) B() complex128 { return x.b }
+
+func (x *State) At(i int) complex128 {
+	switch i {
+	case 0: return x.a
+	case 1: return x.b
+	default:
+		log.Panicf("The index must be in [%d, %d)", 0, 2)
+	  return cmplx.NaN()
+	}
+}
 
 // New function return the state a|0> + b|1> (when isNormalized is true).
 // If isNormalized is false, the returned state is (a|0> + b|1>)/√(a^2+b^2).
@@ -59,13 +71,13 @@ func New(a, b complex128, isNormalized bool) *State {
 }
 
 // <x|y>
-func (x *State) Prod(y *State) complex128 {
+func (x *State) InnerProduct(y *State) complex128 {
 	return cmplx.Conj(x.a) * y.a + cmplx.Conj(x.b) * y.b
 }
 
 // |<x|y>|
 func (x *State) Amplitude(y *State) float64 {
-	return cmplx.Abs(x.Prod(y))
+	return cmplx.Abs(x.InnerProduct(y))
 }
 
 // |<x|y>|^2
@@ -83,6 +95,13 @@ func (x *State) EqualState(y *State, delta float64) bool {
 // |<x|y>| == 0 (|<x|y>| <= delta)
 func (x *State) IsOrthogonalTo(y *State, delta float64) bool {
 	return x.Amplitude(y) <= delta
+}
+
+// |x><y|
+func (x *State) OuterProduct(y *State) op.Matrix2x2 {
+	return op.NewMatrix2x2(
+		cmplx.Conj(x.a)*y.a, cmplx.Conj(x.a)*y.b,
+		cmplx.Conj(x.b)*y.a, cmplx.Conj(x.b)*y.b)
 }
 
 func (s *State) String() string {

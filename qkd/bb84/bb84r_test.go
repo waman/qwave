@@ -3,7 +3,6 @@ package bb84
 import (
 	"github.com/waman/qwave/qkd"
 	"fmt"
-	"log"
 	"time"
 	"math/rand"
 	"gonum.org/v1/plot/plotter"
@@ -16,11 +15,12 @@ func ExampleBB84ProtocolWithEveR(){
 	aliceKey, bobKey, _ := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(n), NewBob(n), qkd.NewObservingEveR())
 
-	//log.Printf("Alice's key: %s", aliceKey)
-	//log.Printf("Bob's key  : %s", bobKey)
-	log.Printf("Concordance rate: %f", aliceKey.ConcordanceRate(bobKey))
+	//fmt.Printf("Alice's key: %s...\n", aliceKey[:20])
+	//fmt.Printf("Bob's key  : %s...\n", bobKey[:20])
+	fmt.Printf("Concordance rate: %.2f\n", aliceKey.ConcordanceRate(bobKey))
 	fmt.Println(aliceKey.Equals(bobKey))
 	// Output:
+	// Concordance rate: 0.75
 	// false
 }
 
@@ -39,7 +39,7 @@ func ExampleSuccessRateOfEavesdroppingR(){
 			if aliceKey.Equals(bobKey) { matched++ }
 		}
 		rate := 1-float64(matched)/float64(nTry)
-		log.Printf("%d: %.3f\n", nKey, rate)
+		// fmt.Printf("%d: %.3f\n", nKey, rate)
 
 		i := nKey-1
 		data[i].X = float64(nKey)
@@ -58,16 +58,16 @@ func ExampleConcordanceRateBetweenAliceAndEveR(){
 	aliceKey, bobKey, eveKey := qkd.EstablishKeysWithEavesdropping(
 		NewAlice(nKey), NewBob(nKey), NewEveR(nKey))
 
-	log.Printf("Concordance Rate between Alice and Bob: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Bob: %.3f\n",
 		aliceKey.ConcordanceRate(bobKey))
-	log.Printf("Concordance Rate between Alice and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Eve: %.2f\n",
 		aliceKey.ConcordanceRate(eveKey))
-	log.Printf("Concordance Rate between Bob and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Bob and Eve: %.2f\n",
 		bobKey.ConcordanceRate(eveKey))
-
-	fmt.Println("Done.")
 	// Output:
-	// Done.
+	// Concordance Rate between Alice and Bob: 0.750
+  // Concordance Rate between Alice and Eve: 0.66
+  // Concordance Rate between Bob and Eve: 0.66
 }
 
 func ExampleConcordanceRateBetweenAliceAndEveWhenEavesdroppingSucceedR(){
@@ -86,10 +86,8 @@ func ExampleConcordanceRateBetweenAliceAndEveWhenEavesdroppingSucceedR(){
 		}
 	}
 
-	log.Printf("Concordance Rate between Alice and Eve: %.3f",
+	fmt.Printf("Concordance Rate between Alice and Eve: %.3f\n",
 		float32(conc)/float32(n*nKey))
-
-	fmt.Println("Done.")
 	// Output:
-	// Done.
+  // Concordance Rate between Alice and Eve: 0.710
 }

@@ -4,15 +4,17 @@ import (
 	"log"
 	"math/cmplx"
 	"github.com/waman/qwave/system"
+	"github.com/waman/qwave/system/nqubits/nop"
 )
 
 type MetricVector interface{
 	Dim() int
 	Coefficients() []complex128
 	CoefficientMap() map[int]complex128
-	Get(i int) complex128
+	At(i int) complex128
 
-	Prod(y MetricVector) complex128
+	InnerProduct(y MetricVector) complex128
+	OuterProduct(y MetricVector) nop.Matrix
 }
 
 //***** BaseMetricVector (uni-component MetricVector) *****
@@ -37,7 +39,7 @@ func (s *BaseMetricVector) CoefficientMap() map[int]complex128 {
 	return cMap
 }
 
-func (s *BaseMetricVector) Get(i int) complex128 {
+func (s *BaseMetricVector) At(i int) complex128 {
 	if i == s.i {
 		return 1
 	} else if 0 <= i && i < s.n {
@@ -48,9 +50,15 @@ func (s *BaseMetricVector) Get(i int) complex128 {
 	}
 }
 
-func (x *BaseMetricVector) Prod(y MetricVector) complex128 {
-	checkMatchingQubitCount(x, y)
-	return y.Get(x.i)
+func (x *BaseMetricVector) InnerProduct(y MetricVector) complex128 {
+	checkMatchingDimensions(x, y)
+	return y.At(x.i)
+}
+
+func (s *BaseMetricVector) OuterProduct(y MetricVector) nop.Matrix {
+	cMap := make(map[int]map[int]complex128)
+	cMap[s.i] = y.CoefficientMap()
+	return nop.NewSparse(s.n, cMap, false)
 }
 
 //***** DenseMetricVector (slice-base implementation) *****
@@ -70,14 +78,18 @@ func (s *DenseMetricVector) CoefficientMap() map[int]complex128 {
 	return system.SliceToMap(s.cs)
 }
 
-func (s *DenseMetricVector) Get(i int) complex128 {
+func (s *DenseMetricVector) At(i int) complex128 {
 	return s.cs[i]
 }
 
 // <x|y>
-func (x *DenseMetricVector) Prod(y MetricVector) complex128 {
-	checkMatchingQubitCount(x, y)
+func (x *DenseMetricVector) InnerProduct(y MetricVector) complex128 {
+	checkMatchingDimensions(x, y)
 	return InnerProduct(x.cs, y)
+}
+
+func (s *DenseMetricVector) OuterProduct(y MetricVector) nop.Matrix {
+	return OuterProduct(s.cs, y)
 }
 
 //***** SparseMetricVector (uni-component MetricVector) *****
@@ -102,7 +114,7 @@ func (s *SparseMetricVector) CoefficientMap() map[int]complex128 {
 	return system.CreateCopyMap(s.cMap)
 }
 
-func (s *SparseMetricVector) Get(i int) complex128 {
+func (s *SparseMetricVector) At(i int) complex128 {
 	if 0 <= i && i < s.n {
 		return s.cMap[i]
 	} else {
@@ -111,17 +123,12 @@ func (s *SparseMetricVector) Get(i int) complex128 {
 	}
 }
 
-func (x *SparseMetricVector) Prod(y MetricVector) complex128 {
-	checkMatchingQubitCount(x, y)
-	result := 0i
-	for i, c := range x.cMap {
-		result += cmplx.Conj(c)*y.Get(i)
-	}
-	return result
+func (x *SparseMetricVector) InnerProduct(y MetricVector) complex128 {
+	checkMatchingDimensions(x, y)
+	return InnerProductMap(x.cMap, y)
 }
 
-func checkMatchingQubitCount(x, y MetricVector){
-	if x.Dim() != y.Dim() {
-		log.Panicf("Two MetricVectors have different dimensions: %d, %d", x.Dim(), y.Dim())
-	}
+func (x *SparseMetricVector) OuterProduct(y MetricVector) nop.Matrix {
+	checkMatchingDimensions(x, y)
+	return OuterProductMap(x.Dim(), x.cMap, y)
 }
