@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/cmplx"
 	"github.com/waman/qwave/system"
+	"github.com/ToQoz/gopwt/assert"
 )
 
 const delta = 1e-10
@@ -25,9 +26,8 @@ func TestEqualState(t *testing.T){
 		{zero, &State{0, 1}, false},
 	}
 	for _, test := range tests {
-		if got := test.first.EqualState(test.second, delta); got != test.want {
-			t.Errorf("(%v).Equal(%v) = %v", test.first, test.second, got)
-		}
+		assert.OK(t, test.first.EqualState(test.second, delta) == test.want,
+		 "Two states must be equivalent")
 	}
 }
 
@@ -43,9 +43,8 @@ func TestIsOrthogonalTo(t *testing.T){
 		{zero, minusI, false},
 	}
 	for _, test := range tests {
-		if got := test.first.IsOrthogonalTo(test.second, delta); got != test.want {
-			t.Errorf("(%v).IsOrthogonalTo(%v) = %v", test.first, test.second, got)
-		}
+		assert.OK(t, test.first.IsOrthogonalTo(test.second, delta) == test.want,
+			"Two states must be orthgonal.")
 	}
 }
 
@@ -62,10 +61,8 @@ func TestStringMethod(t *testing.T){
 		{minusI, "|-i>"},
 		{New(3, 4, false), "0.6|0> + 0.8|1>"},
 	}
-	for i, test := range tests {
-		if got := test.state.String(); got != test.want {
-			t.Errorf("%d番目：(%q).String() != %s", i, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, test.state.String() == test.want)
 	}
 }
 
@@ -90,12 +87,9 @@ func TestPolarMethod(t *testing.T){
 		{plusI, math.Pi/2, math.Pi/2},
 		{minusI, math.Pi/2, math.Pi*3/2},
 	}
-	for i, test := range tests {
-		if gotTheta, gotPhi := test.state.Polar();
-			  !(EqF10(gotTheta, test.wantTheta) && EqF10(gotPhi, test.wantPhi) ){
-			t.Errorf("%d番目：(%f, %f) != (%f, %f)",
-				i, gotTheta, gotPhi, test.wantTheta, test.wantPhi)
-		}
+	for _, test := range tests {
+		gotTheta, gotPhi := test.state.Polar()
+		assert.OK(t, EqF10(gotTheta, test.wantTheta) && EqF10(gotPhi, test.wantPhi))
 	}
 }
 
@@ -112,17 +106,14 @@ func TestByPolarFunction(t *testing.T){
 		{math.Pi/2, math.Pi*3/2, minusI},
 		{math.Pi/3, math.Pi/4, &State{complex(math.Sqrt(3)/2, 0), cmplx.Exp(math.Pi*1i/4)/2}},
 	}
-	for i, test := range tests {
-		if got := ByPolar(test.theta, test.phi); !got.EqualState(test.want, delta){
-			t.Errorf("%d番目： ByPolar(%f, %f) = %q != %q", i, test.theta, test.phi, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, ByPolar(test.theta, test.phi).EqualState(test.want, delta))
 	}
 }
 
 func TestComplexMethod(t *testing.T){
-	if !cmplx.IsInf(one.Complex()) {
-		t.Errorf("(|0>).Complex() is not cmplx.Inf()")
-	}
+	// |1> -> infinity
+	assert.OK(t, cmplx.IsInf(one.Complex()), "(|1>).Complex() is not cmplx.Inf()")
 
 	var tests = []struct {
 		state *State
@@ -137,10 +128,8 @@ func TestComplexMethod(t *testing.T){
 		{New(3, 4, false), 4.0/3.0},
 		{New(5, 12i, false), 2.4i},
 	}
-	for i, test := range tests {
-		if got := test.state.Complex(); !EqC10(got, test.want) {
-			t.Errorf("%d番目：(%q).Complex() = %g != %g",	i, test.state, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, EqC10(test.state.Complex(), test.want))
 	}
 }
 
@@ -159,10 +148,8 @@ func TestByComplexFunction(t *testing.T){
 		{3.0/4.0, New(4, 3, false)},
 		{5.0i/12.0, New(12, 5i, true)},
 	}
-	for i, test := range tests {
-		if got := ByComplex(test.c); !got.EqualState(test.want, 1e-10) {
-			t.Errorf("%d番目：ByComplex(%g) = %s != %s",	i, test.c, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, ByComplex(test.c).EqualState(test.want, 1e-10))
 	}
 }
 

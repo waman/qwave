@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/waman/qwave/system/qubits2/ket2"
 	"testing"
+	"github.com/ToQoz/gopwt/assert"
 )
 
 func ExampleKet2New(){
@@ -29,7 +30,5 @@ func TestInstanceEquality(t *testing.T){
 	qbts0 := NewPhiPlus()
 	qbts1 := NewPhiPlus()
 
-	if qbts0 == qbts1 {
-		t.Errorf("==")
-	}
+	assert.OK(t, qbts0 != qbts1)
 }

@@ -1,6 +1,9 @@
 package system
 
-import "testing"
+import (
+	"testing"
+	"github.com/ToQoz/gopwt/assert"
+)
 
 func TestStringMethod(t *testing.T){
 	var tests = []struct {
@@ -11,9 +14,7 @@ func TestStringMethod(t *testing.T){
 		{[]complex128{2, -3, 4i, -5i, 6, -7, 8i, -9i},
 		  "2|000> - 3|001> + 4i|010> - 5i|011> + 6|100> - 7|101> + 8i|110> - 9i|111>"},
 	}
-	for i, test := range tests {
-		if got := ToString(test.cs...); got != test.want {
-			t.Errorf("%d番目：%s != %s", i, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, ToString(test.cs...) == test.want)
 	}
 }

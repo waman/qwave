@@ -3,6 +3,7 @@ package nop
 import (
 	"fmt"
 	"testing"
+	"github.com/ToQoz/gopwt/assert"
 )
 
 func ExampleNew(){
@@ -20,9 +21,7 @@ func TestNew(t *testing.T){
 		{New(2, 1, 1), "[[(1+0i) (1+0i)] [(0+0i) (0+0i)]]"},
 		{New(2, 0, 1, 1, 0), "[[(0+0i) (1+0i)] [(1+0i) (0+0i)]]"},
 	}
-	for i, test := range tests {
-		if got := test.mat.String(); got != test.want {
-			t.Errorf("nop.New() %d番目：%s != %s",	i, got, test.want)
-		}
+	for _, test := range tests {
+		assert.OK(t, test.mat.String() == test.want)
 	}
 }

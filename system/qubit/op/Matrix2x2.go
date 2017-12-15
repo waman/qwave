@@ -20,7 +20,7 @@ type Matrix2x2 interface {
 	String() string
 
 	Apply(x, y complex128) (complex128, complex128)
-	CloneMutable() MutableMatrix2
+	CloneMutable() MutableMatrix2x2
 }
 
 func NewMatrix2x2(a, b, c, d complex128) Matrix2x2 {
@@ -79,7 +79,7 @@ func (u *matrix2x2) String() string {
 	return fmt.Sprintf("[[%v %v] [%v %v]]", u.a, u.b, u.c, u.d)
 }
 
-func (u *matrix2x2) CloneMutable() MutableMatrix2 {
+func (u *matrix2x2) CloneMutable() MutableMatrix2x2 {
 	return New(u.a, u.b, u.c, u.d)
 }
 

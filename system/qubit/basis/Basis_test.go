@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func ExampleBasisNew(){
+func ExampleNew(){
 	delta := 1e-10
 	b := New(ket.New(3, 4, false), ket.New(4, -3, false), delta)
 	fmt.Println(b)
@@ -13,7 +13,7 @@ func ExampleBasisNew(){
 	// {0.6|0> + 0.8|1>, 0.8|0> - 0.6|1>}
 }
 
-func ExampleBasisMethods(){
+func ExampleFirstAndSecondMethods(){
 	b := Standard()
 	fmt.Println(b.First() == ket.Zero())
 	fmt.Println(b.Second() == ket.One())

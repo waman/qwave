@@ -6,12 +6,12 @@ import (
 	"fmt"
 )
 
-type MutableMatrix2 interface {
+type MutableMatrix2x2 interface {
 	Matrix2x2
 	Mul(x, y Matrix2x2) Matrix2x2
 }
 
-func New(a, b, c, d complex128) MutableMatrix2 {
+func New(a, b, c, d complex128) MutableMatrix2x2 {
 	return &mutableMatrix2x2{a, b, c, d}
 }
 
@@ -67,7 +67,7 @@ func (u *mutableMatrix2x2) Apply(x, y complex128) (complex128, complex128) {
 		     u.c*x + u.d*y
 }
 
-func (u *mutableMatrix2x2) CloneMutable() MutableMatrix2 {
+func (u *mutableMatrix2x2) CloneMutable() MutableMatrix2x2 {
 	return New(u.a, u.b, u.c, u.d)
 }
 
@@ -75,7 +75,7 @@ func (z *mutableMatrix2x2) Mul(x, y Matrix2x2) Matrix2x2 {
 	z.a, z.b,
 	z.c, z.d =
 		x.A()*y.A() + x.B()*y.C(), x.A()*y.B() + x.B()*y.D(),
-		x.C()*y.A() + x.C()*y.C(), x.C()*y.B() + x.D()*y.D()
+		x.C()*y.A() + x.D()*y.C(), x.C()*y.B() + x.D()*y.D()
 
 	return z
 }

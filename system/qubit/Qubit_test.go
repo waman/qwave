@@ -5,23 +5,20 @@ import (
 	"github.com/waman/qwave/system/qubit/basis"
 	"github.com/waman/qwave/system/qubit/ket"
 	"github.com/waman/qwave/system/qubit/op"
+	"github.com/ToQoz/gopwt/assert"
 )
 
 func TestEquality(t *testing.T){
 	q1 := NewOne()
 	q2 := NewOne()
-	if q1 == q2 {
-		t.Errorf("== operator")
-	}
+	assert.OK(t, q1 != q2)
 }
 
 func TestObserve(t *testing.T){
 	qbt := NewPlus()
 	std := basis.Standard()
 	result := qbt.Observe(std)
-	if !(result == std.First() ||	result == std.Second()){
-		t.Errorf("Observe method")
-	}
+	assert.OK(t, result == std.First() || result == std.Second())
 }
 
 func TestObserveInTheSameBasis(t *testing.T){
@@ -29,9 +26,7 @@ func TestObserveInTheSameBasis(t *testing.T){
 	std := basis.Standard()
 	result := qbt.Observe(std)
 	for i := 0; i < 100; i++ {
-		if qbt.Observe(std) != result {
-			t.Errorf("Observe method")
-		}
+		assert.OK(t, qbt.Observe(std) == result)
 	}
 }
 
